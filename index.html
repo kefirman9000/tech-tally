@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech Tally – Electrician Performance Summary</title>
+<style>
+  :root{
+    --bg:#f5f4f0; --panel:#ffffff; --ink:#1c1d1f; --muted:#6b6d72; --line:#e2e0da;
+    --accent:#e8a400; --accent-ink:#4a3500; --good:#1f8a4c; --warn:#c77700; --bad:#c0392b;
+    --dark:#22252b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--dark);color:#fff;padding:18px 28px;display:flex;align-items:center;gap:14px}
+  header .bolt{width:34px;height:34px;background:var(--accent);border-radius:8px;display:grid;place-items:center}
+  header h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.2px}
+  header p{margin:0;color:#b9bcc3;font-size:12.5px}
+  main{max-width:1280px;margin:0 auto;padding:22px 28px 60px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:18px}
+  h2{font-size:15px;margin:0 0 12px;font-weight:650}
+  .drop{border:2px dashed #c9c5ba;border-radius:12px;padding:34px 20px;text-align:center;background:#fbfaf7;cursor:pointer;transition:.15s}
+  .drop.over{border-color:var(--accent);background:#fff7e0}
+  .drop strong{font-size:16px;display:block;margin-bottom:4px}
+  .drop span{color:var(--muted)}
+  .files{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{background:#efede7;border-radius:999px;padding:4px 10px 4px 12px;font-size:12.5px;display:flex;gap:6px;align-items:center}
+  .chip button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:14px;padding:0 2px}
+  .grid-map{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px 16px}
+  .grid-map label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+  .grid-map label b{color:var(--ink);font-weight:600}
+  select,input[type=number]{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;font:inherit}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;font-weight:550}
+  .btn:hover{border-color:#bdb9ae}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn.primary:hover{filter:brightness(.96)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .hint{color:var(--muted);font-size:12.5px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+  .kpi{background:#fbfaf7;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kpi .v{font-size:20px;font-weight:700}
+  .kpi .l{font-size:12px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);cursor:pointer;user-select:none;position:sticky;top:0;background:#fff}
+  th.sorted::after{content:" ▾"} th.sorted.asc::after{content:" ▴"}
+  tbody tr:hover{background:#fbf8ef}
+  .table-wrap{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:10px}
+  .name-link{color:var(--ink);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:#d6d2c6;text-underline-offset:3px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+  .g{background:#e3f4ea;color:var(--good)} .w{background:#fdf0dc;color:var(--warn)} .b{background:#fbe5e2;color:var(--bad)} .n{background:#eeeeee;color:#666}
+  .hidden{display:none!important}
+  .bar{height:6px;background:#eee;border-radius:4px;overflow:hidden;min-width:60px}
+  .bar i{display:block;height:100%;background:var(--accent)}
+  /* Individual report */
+  .report{background:#fff;border:1px solid var(--line);border-radius:12px;padding:26px 30px;margin-bottom:18px}
+  .report h3{margin:0;font-size:20px}
+  .report .sub{color:var(--muted);margin:2px 0 16px}
+  .report .score{font-size:40px;font-weight:800;line-height:1}
+  .report .head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:3px solid var(--accent);padding-bottom:14px;margin-bottom:16px}
+  .report .two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .report h4{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:16px 0 8px}
+  .report table td,.report table th{padding:6px 8px}
+  .report th{position:static;cursor:default}
+  .notes li{margin-bottom:4px}
+  .modal-bg{position:fixed;inset:0;background:rgba(20,20,25,.45);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;overflow:auto;z-index:20}
+  .modal{max-width:920px;width:100%}
+  .modal-bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
+  #printArea{display:none}
+  @media print{
+    body{background:#fff}
+    body > *:not(#printArea){display:none!important}
+    #printArea{display:block!important}
+    .report{border:0;border-radius:0;padding:0;margin:0;page-break-after:always;break-after:page}
+    .report:last-child{page-break-after:auto;break-after:auto}
+    .pill{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .report .head{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+  @media (max-width:760px){.report .two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bolt"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="#3a2a00"/></svg></div>
+  <div>
+    <h1>Tech Tally</h1>
+    <p>Drop in timesheet / work-order CSVs → get a performance &amp; efficiency summary for every employee. Runs entirely offline in your browser — nothing is uploaded.</p>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>1. Add CSV files</h2>
+    <div id="drop" class="drop">
+      <strong>Drag &amp; drop CSV files here</strong>
+      <span>or click to choose — you can add several files at once (e.g. one per week or per crew)</span>
+      <input id="fileInput" type="file" accept=".csv,text/csv,.txt" multiple hidden>
+    </div>
+    <div id="fileList" class="files"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="sampleBtn">Load sample data</button>
+      <button class="btn" id="clearBtn">Clear all</button>
+      <span class="hint" id="rowCount"></span>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="mapPanel">
+    <h2>2. Check the columns</h2>
+    <p class="hint" style="margin-top:-6px">Columns were matched automatically. Fix any that are wrong — only <b>Employee name</b> is required. Everything else just adds more metrics.</p>
+    <div class="grid-map" id="mapGrid"></div>
+    <h2 style="margin-top:18px">Settings</h2>
+    <div class="grid-map">
+      <div><label><b>Standard hours / week</b> (overtime above this)</label><input type="number" id="setWeek" value="40" min="0" step="0.5"></div>
+      <div><label><b>Standard hours / day</b> (used if no weekly dates)</label><input type="number" id="setDay" value="8" min="0" step="0.5"></div>
+      <div><label><b>Efficiency target %</b> (estimated ÷ actual hours)</label><input type="number" id="setTarget" value="100" min="1" step="1"></div>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="resultPanel">
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <h2 style="margin:0">3. Team summary</h2>
+      <div class="row">
+        <button class="btn primary" id="exportTeam">Export team summary (CSV)</button>
+        <button class="btn primary" id="exportEach">Export each employee (CSV files)</button>
+        <button class="btn" id="exportHtml">Export all reports (HTML)</button>
+        <button class="btn" id="printAll">Print / PDF all reports</button>
+      </div>
+    </div>
+    <div class="kpis" id="teamKpis"></div>
+    <div class="table-wrap"><table id="teamTable"><thead></thead><tbody></tbody></table></div>
+    <p class="hint" style="margin-top:10px">Click a name to open that person's full report. Click a column header to sort. <b>Score</b> = blend of efficiency, completion rate, quality (no callbacks) and billable utilization — whichever your data includes.</p>
+  </section>
+</main>
+
+<div id="printArea"></div>
+
+<script>
+/* ================= CSV parsing ================= */
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+  // detect delimiter from first line
+  const first=text.split(/\r?\n/,1)[0]||"";
+  const cands=[",",";","\t","|"];
+  let delim=",",best=-1;
+  for(const c of cands){const n=first.split(c).length;if(n>best){best=n;delim=c;}}
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){
+      if(ch==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; }
+      else f+=ch;
+    }else{
+      if(ch==='"') q=true;
+      else if(ch===delim){row.push(f);f="";}
+      else if(ch==='\n'||ch==='\r'){
+        if(ch==='\r'&&text[i+1]==='\n') i++;
+        row.push(f);f="";rows.push(row);row=[];
+      } else f+=ch;
+    }
+  }
+  if(f!==""||row.length){row.push(f);rows.push(row);}
+  return rows.filter(r=>r.some(c=>String(c).trim()!==""));
+}
+function csvEscape(v){
+  if(v==null) v="";
+  v=String(v);
+  return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
+}
+function toCSV(rows){return rows.map(r=>r.map(csvEscape).join(",")).join("\r\n");}
+
+/* ================= State ================= */
+const FIELDS=[
+  {key:"employee",label:"Employee name",req:true,pat:[/^employee(\s*name)?$/,/employee/,/electrician/,/technician|^tech\b|tech name/,/worker|staff|crew member|^name$|full name|person/]},
+  {key:"first",label:"First name (if split)",pat:[/^first(\s*name)?$/]},
+  {key:"last",label:"Last name (if split)",pat:[/^last(\s*name)?$|surname/]},
+  {key:"date",label:"Date",pat:[/^(work\s*)?date$/,/date/,/^day$/]},
+  {key:"hours",label:"Actual hours worked",pat:[/^actual(\s*hours)?$|actual hrs|hours worked|hrs worked|labou?r hours|total hours/,/^hours$|^hrs$/,/time spent|duration/,/hours|hrs/],not:/est|budget|quot|plan|allot|bill|over|^ot/},
+  {key:"start",label:"Start / clock-in time",pat:[/clock\s*in|time\s*in|start(\s*time)?$/]},
+  {key:"end",label:"End / clock-out time",pat:[/clock\s*out|time\s*out|end(\s*time)?$|finish(\s*time)?$/]},
+  {key:"est",label:"Estimated / budgeted hours",pat:[/est|budget|quoted|planned|allotted|allowed|target hours|book hours|flat rate/]},
+  {key:"job",label:"Job / work order #",pat:[/work\s*order|^wo\b|wo\s*#|job\s*(#|no|num|id)/,/^job$|ticket|project|site|address|customer/]},
+  {key:"task",label:"Task / work type",pat:[/task|work\s*type|job\s*type|category|service|description|activity/]},
+  {key:"status",label:"Status / completed",pat:[/status|complete|finished|done/]},
+  {key:"callback",label:"Callback / rework",pat:[/call\s*-?back|rework|re-?do|return\s*visit|warranty|fail/]},
+  {key:"billable",label:"Billable hours (or Y/N)",pat:[/billable|bill\s*hrs|billed/]},
+  {key:"ot",label:"Overtime hours",pat:[/over\s*time|^ot(\s*hrs|\s*hours)?$/]},
+  {key:"revenue",label:"Revenue / invoice $",pat:[/revenue|invoice|amount|sales|billed\s*\$|total\s*\$|price/]},
+  {key:"inspection",label:"Inspection result",pat:[/inspect|pass|fail/]},
+  {key:"safety",label:"Safety incidents",pat:[/safety|incident|injur/]},
+];
+let files=[]; // {name, headers, rows}
+let mapping={}; // key -> header name
+let results=[]; let sortKey="score", sortAsc=false;
+
+const $=s=>document.querySelector(s);
+
+/* ================= File handling ================= */
+const drop=$("#drop"), fileInput=$("#fileInput");
+drop.addEventListener("click",()=>fileInput.click());
+["dragenter","dragover"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop",ev=>addFiles(ev.dataTransfer.files));
+// allow dropping anywhere on the page
+window.addEventListener("dragover",e=>e.preventDefault());
+window.addEventListener("drop",e=>{e.preventDefault(); if(e.target.closest&&!e.target.closest("#drop")) addFiles(e.dataTransfer.files);});
+fileInput.addEventListener("change",()=>{addFiles(fileInput.files);fileInput.value="";});
+
+async function addFiles(list){
+  for(const f of list){
+    if(!/\.(csv|txt|tsv)$/i.test(f.name) && f.type && !/csv|text/.test(f.type)) continue;
+    const text=await f.text();
+    loadText(f.name,text);
+  }
+  refresh();
+}
+function loadText(name,text){
+  const rows=parseCSV(text);
+  if(rows.length<2) return;
+  // find header row: first row with >=2 non-empty cells among first 10
+  let h=0;
+  for(let i=0;i<Math.min(10,rows.length);i++){ if(rows[i].filter(c=>c.trim()).length>=2){h=i;break;} }
+  const headers=rows[h].map(x=>x.trim());
+  const data=rows.slice(h+1).map(r=>{const o={};headers.forEach((k,i)=>o[k]=(r[i]??"").trim());return o;});
+  files=files.filter(f=>f.name!==name);
+  files.push({name,headers,rows:data});
+}
+$("#clearBtn").onclick=()=>{files=[];mapping={};userNone.clear();refresh();};
+
+function allHeaders(){const s=new Set();files.forEach(f=>f.headers.forEach(h=>h&&s.add(h)));return [...s];}
+
+function detect(fd,hs,used){
+  for(const p of fd.pat){ for(const h of hs){ const l=h.toLowerCase().trim(); if(used.has(h)) continue; if(fd.not&&fd.not.test(l)) continue; if(p.test(l)) return h; } }
+  return "";
+}
+// per-file mapping: use the chosen column if this file has it, otherwise auto-detect within this file
+function fileMap(f){
+  const m={},used=new Set();
+  for(const fd of FIELDS){ const g=mapping[fd.key]; if(g&&f.headers.includes(g)){m[fd.key]=g;used.add(g);} }
+  for(const fd of FIELDS){ if(m[fd.key]) continue; if(userNone.has(fd.key)){m[fd.key]="";continue;} m[fd.key]=detect(fd,f.headers,used); if(m[fd.key]) used.add(m[fd.key]); }
+  return m;
+}
+const userNone=new Set();
+function autoMap(){
+  const hs=allHeaders(); const used=new Set(); const m={};
+  for(const fd of FIELDS){
+    if(mapping[fd.key]!==undefined && (mapping[fd.key]===""||hs.includes(mapping[fd.key]))){m[fd.key]=mapping[fd.key]; if(m[fd.key]) used.add(m[fd.key]); continue;}
+    let found="";
+    outer: for(const p of fd.pat){
+      for(const h of hs){
+        const l=h.toLowerCase().trim();
+        if(used.has(h)) continue;
+        if(fd.not && fd.not.test(l)) continue;
+        if(p.test(l)){found=h;break outer;}
+      }
+    }
+    m[fd.key]=found; if(found) used.add(found);
+  }
+  // if both first+last and an "employee" guess that's actually something else, prefer explicit
+  mapping=m;
+}
+
+function renderFiles(){
+  const total=files.reduce((a,f)=>a+f.rows.length,0);
+  $("#fileList").innerHTML=files.map((f,i)=>`<span class="chip">📄 ${esc(f.name)} <small style="color:#888">(${f.rows.length} rows)</small><button title="Remove" data-i="${i}">×</button></span>`).join("");
+  $("#fileList").querySelectorAll("button").forEach(b=>b.onclick=()=>{files.splice(+b.dataset.i,1);refresh();});
+  $("#rowCount").textContent=files.length?`${files.length} file(s), ${total} rows total`:"";
+}
+function renderMap(){
+  const hs=allHeaders();
+  $("#mapGrid").innerHTML=FIELDS.map(fd=>`<div><label><b>${fd.label}</b>${fd.req?' *':''}</label><select data-k="${fd.key}"><option value="">— not in my data —</option>${hs.map(h=>`<option ${mapping[fd.key]===h?"selected":""}>${esc(h)}</option>`).join("")}</select></div>`).join("");
+  $("#mapGrid").querySelectorAll("select").forEach(s=>s.onchange=()=>{mapping[s.dataset.k]=s.value; if(s.value) userNone.delete(s.dataset.k); else userNone.add(s.dataset.k); compute();});
+}
+["#setWeek","#setDay","#setTarget"].forEach(id=>$(id).addEventListener("input",()=>compute()));
+
+function refresh(){
+  renderFiles();
+  const has=files.length>0;
+  $("#mapPanel").classList.toggle("hidden",!has);
+  $("#resultPanel").classList.toggle("hidden",!has);
+  if(!has){results=[];return;}
+  autoMap(); renderMap(); compute();
+}
+
+/* ================= Value helpers ================= */
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function num(v){
+  if(v==null) return NaN; v=String(v).trim(); if(!v) return NaN;
+  // h:mm duration
+  let m=v.match(/^(\d+):(\d{1,2})(?::\d{1,2})?$/); if(m && !/am|pm/i.test(v)) return +m[1]+ +m[2]/60;
+  m=v.match(/^(\d+(?:\.\d+)?)\s*h(?:rs?|ours?)?\s*(?:(\d+)\s*m(?:in)?s?)?$/i); if(m) return +m[1]+(m[2]?+m[2]/60:0);
+  const n=parseFloat(v.replace(/[$,\s]/g,"").replace(/\((.*)\)/,"-$1"));
+  return isNaN(n)?NaN:n;
+}
+function parseTime(v){
+  if(!v) return NaN; v=String(v).trim();
+  // may include date
+  const m=v.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([ap]\.?m\.?)?/i);
+  if(m){let h=+m[1];const mi=+m[2];const ap=m[4]&&m[4][0].toLowerCase();if(ap==="p"&&h<12)h+=12;if(ap==="a"&&h===12)h=0;return h+mi/60;}
+  const m2=v.match(/^(\d{1,2})\s*([ap])\.?m?\.?$/i); if(m2){let h=+m2[1];if(m2[2].toLowerCase()==="p"&&h<12)h+=12;if(m2[2].toLowerCase()==="a"&&h===12)h=0;return h;}
+  const m3=v.match(/^(\d{3,4})$/); if(m3){const s=m3[1].padStart(4,"0");return +s.slice(0,2)+ +s.slice(2)/60;}
+  return NaN;
+}
+function parseDate(v){
+  if(!v) return null; v=String(v).trim();
+  let m=v.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[1]-1,+m[2]);} // US M/D/Y
+  const n=num(v); if(!isNaN(n)&&n>20000&&n<80000){return new Date(Math.round((n-25569)*864e5)+new Date().getTimezoneOffset()*6e4);} // Excel serial
+  const d=new Date(v); return isNaN(d)?null:new Date(d.getFullYear(),d.getMonth(),d.getDate());
+}
+function dkey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function weekKey(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return dkey(x);}
+function truthy(v){
+  if(v==null) return false; v=String(v).trim().toLowerCase(); if(!v) return false;
+  if(/^(y|yes|true|1|x|✓|✔)$/.test(v)) return true;
+  if(/^(n|no|false|0|none|-|n\/a)$/.test(v)) return false;
+  const n=num(v); if(!isNaN(n)) return n>0;
+  return /call\s*back|rework|redo|return|fail/.test(v);
+}
+function countVal(v){const n=num(v); if(!isNaN(n)) return Math.max(0,n); return truthy(v)?1:0;}
+function isComplete(v){
+  v=String(v||"").trim().toLowerCase(); if(!v) return null;
+  if(/incomplete|not\s*(complete|done|finished)|open|pending|in\s*progress|on\s*hold|wip|scheduled|cancel/.test(v)) return false;
+  if(/complete|done|closed|finished|^y(es)?$|^true$|^1$|invoiced|paid|passed/.test(v)) return true;
+  return false;
+}
+function normName(s){
+  s=String(s||"").replace(/\s+/g," ").trim(); if(!s) return "";
+  // "Last, First" -> "First Last"
+  const m=s.match(/^([^,]+),\s*(.+)$/); if(m) s=m[2]+" "+m[1];
+  return s.toLowerCase().replace(/\b([a-z])/g,c=>c.toUpperCase()).replace(/\bMc([a-z])/g,(a,b)=>"Mc"+b.toUpperCase());
+}
+const fmt=(n,d=1)=>(n==null||isNaN(n)||!isFinite(n))?"—":Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=(n,d=0)=>(n==null||isNaN(n)||!isFinite(n))?"—":fmt(n*100,d)+"%";
+const money=n=>(n==null||isNaN(n))?"—":"$"+Number(n).toLocaleString(undefined,{maximumFractionDigits:0});
+
+/* ================= Compute ================= */
+function compute(){
+  const fms=files.map(fileMap);
+  const M={}; FIELDS.forEach(fd=>M[fd.key]=fms.some(m=>m[fd.key])?(mapping[fd.key]||"(auto)"):""); window.EFFMAP=M;
+  const weekStd=+$("#setWeek").value||40, dayStd=+$("#setDay").value||8, target=(+$("#setTarget").value||100)/100;
+  const emps=new Map();
+  files.forEach((f,fi)=>{ const M=fms[fi];
+    for(const r of f.rows){
+      let name="";
+      if(M.employee) name=r[M.employee];
+      if((!name||!M.employee) && (M.first||M.last)) name=[r[M.first]||"",r[M.last]||""].join(" ");
+      name=normName(name); if(!name) continue;
+      if(!emps.has(name)) emps.set(name,{name,rows:[],files:new Set()});
+      const e=emps.get(name); e.files.add(f.name);
+      let hrs=M.hours?num(r[M.hours]):NaN;
+      if(isNaN(hrs)&&M.start&&M.end){const s=parseTime(r[M.start]),en=parseTime(r[M.end]);if(!isNaN(s)&&!isNaN(en)){hrs=en-s;if(hrs<0)hrs+=24;}}
+      const d=M.date?parseDate(r[M.date]):null;
+      let bill=NaN; if(M.billable){const bv=num(r[M.billable]); bill=!isNaN(bv)?bv:(truthy(r[M.billable])?(isNaN(hrs)?0:hrs):0);}
+      e.rows.push({
+        hrs:isNaN(hrs)?0:hrs, hasHrs:!isNaN(hrs), d,
+        est:M.est?num(r[M.est]):NaN,
+        job:M.job?(r[M.job]||"").trim():"",
+        task:M.task?(r[M.task]||"").trim():"",
+        done:M.status?isComplete(r[M.status]):null,
+        cb:M.callback?countVal(r[M.callback]):0,
+        bill, ot:M.ot?num(r[M.ot]):NaN,
+        rev:M.revenue?num(r[M.revenue]):NaN,
+        insp:M.inspection?String(r[M.inspection]||"").trim().toLowerCase():"",
+        safety:M.safety?countVal(r[M.safety]):0,
+      });
+    }
+  });
+  results=[...emps.values()].map(e=>{
+    const R=e.rows; const s={name:e.name,entries:R.length,files:[...e.files]};
+    s.hours=R.reduce((a,r)=>a+r.hrs,0);
+    const days=new Set(R.filter(r=>r.d).map(r=>dkey(r.d)));
+    s.days=days.size||null;
+    const dates=R.filter(r=>r.d).map(r=>r.d.getTime());
+    s.from=dates.length?new Date(Math.min(...dates)):null; s.to=dates.length?new Date(Math.max(...dates)):null;
+    s.avgDay=s.days?s.hours/s.days:null;
+    // jobs
+    const jobs=new Set(R.filter(r=>r.job).map(r=>r.job.toLowerCase()));
+    s.jobs=M.job?jobs.size:null;
+    s.hrsPerJob=s.jobs?s.hours/s.jobs:null;
+    // efficiency (only rows with both est & actual)
+    const er=R.filter(r=>!isNaN(r.est)&&r.est>0&&r.hasHrs&&r.hrs>0);
+    s.estH=er.reduce((a,r)=>a+r.est,0); s.actH=er.reduce((a,r)=>a+r.hrs,0);
+    s.eff=er.length&&s.actH?s.estH/s.actH:null;
+    s.onBudget=er.length?er.filter(r=>r.hrs<=r.est*1.0001).length/er.length:null;
+    s.effRows=er.length;
+    s.hoursVar=er.length?s.actH-s.estH:null;
+    // completion
+    const st=R.filter(r=>r.done!==null);
+    s.completed=st.length?st.filter(r=>r.done).length:null;
+    s.compRate=st.length?s.completed/st.length:null;
+    // callbacks
+    s.callbacks=M.callback?R.reduce((a,r)=>a+r.cb,0):null;
+    const denom=s.jobs||s.completed||s.entries;
+    s.cbRate=M.callback&&denom?s.callbacks/denom:null;
+    // billable
+    s.billH=M.billable?R.reduce((a,r)=>a+(isNaN(r.bill)?0:r.bill),0):null;
+    s.util=M.billable&&s.hours?s.billH/s.hours:null;
+    // overtime
+    if(M.ot){s.ot=R.reduce((a,r)=>a+(isNaN(r.ot)?0:r.ot),0);}
+    else if(R.some(r=>r.d)){
+      const wk={};R.forEach(r=>{if(r.d){const k=weekKey(r.d);wk[k]=(wk[k]||0)+r.hrs;}});
+      s.ot=Object.values(wk).reduce((a,h)=>a+Math.max(0,h-weekStd),0);
+      s.weeks=Object.keys(wk).length;
+    } else s.ot=null;
+    // revenue
+    s.rev=M.revenue?R.reduce((a,r)=>a+(isNaN(r.rev)?0:r.rev),0):null;
+    s.revPerHr=s.rev!=null&&s.hours?s.rev/s.hours:null;
+    // inspections
+    if(M.inspection){const ins=R.filter(r=>r.insp);s.inspN=ins.length;s.inspPass=ins.length?ins.filter(r=>/pass|ok|approved|^y|good/.test(r.insp)&&!/fail/.test(r.insp)).length/ins.length:null;} else {s.inspPass=null;}
+    s.safety=M.safety?R.reduce((a,r)=>a+r.safety,0):null;
+    // task breakdown
+    const tb={};R.forEach(r=>{const k=r.task||"(unspecified)";tb[k]=tb[k]||{n:0,h:0,est:0,act:0};tb[k].n++;tb[k].h+=r.hrs;if(!isNaN(r.est)&&r.est>0&&r.hrs>0){tb[k].est+=r.est;tb[k].act+=r.hrs;}});
+    s.tasks=Object.entries(tb).sort((a,b)=>b[1].h-a[1].h);
+    // daily
+    const dl={};R.forEach(r=>{if(r.d){const k=dkey(r.d);dl[k]=(dl[k]||0)+r.hrs;}}); s.daily=dl;
+    s.longDays=Object.values(dl).filter(h=>h>dayStd).length;
+    s._rows=R;
+    // score
+    const parts=[];
+    if(s.eff!=null) parts.push([Math.min(s.eff/target,1.2)/1.2*100,0.4]);
+    if(s.compRate!=null) parts.push([s.compRate*100,0.25]);
+    if(s.cbRate!=null) parts.push([Math.max(0,1-s.cbRate*5)*100,0.2]);
+    if(s.inspPass!=null) parts.push([s.inspPass*100,0.15]);
+    if(s.util!=null) parts.push([Math.min(s.util/0.85,1)*100,0.15]);
+    const w=parts.reduce((a,p)=>a+p[1],0);
+    s.score=w?parts.reduce((a,p)=>a+p[0]*p[1],0)/w:null;
+    return s;
+  });
+  // team averages and ranks
+  const team={};
+  const avg=k=>{const v=results.map(r=>r[k]).filter(x=>x!=null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;};
+  ["hours","days","avgDay","jobs","hrsPerJob","eff","onBudget","compRate","cbRate","util","ot","rev","revPerHr","score","inspPass"].forEach(k=>team[k]=avg(k));
+  team.totHours=results.reduce((a,r)=>a+r.hours,0);
+  const tEst=results.reduce((a,r)=>a+r.estH,0),tAct=results.reduce((a,r)=>a+r.actH,0); team.effAll=tAct?tEst/tAct:null;
+  window.TEAM=team;
+  const ranked=[...results].filter(r=>r.score!=null).sort((a,b)=>b.score-a.score);
+  ranked.forEach((r,i)=>r.rank=i+1); results.forEach(r=>{r.of=ranked.length;});
+  render();
+}
+
+/* ================= Rendering ================= */
+function effPill(e){if(e==null)return '<span class="pill n">—</span>';const t=(+$("#setTarget").value||100)/100;const c=e>=t?"g":e>=t*0.85?"w":"b";return `<span class="pill ${c}">${pct(e)}</span>`;}
+function scorePill(s){if(s==null)return '<span class="pill n">—</span>';const c=s>=85?"g":s>=70?"w":"b";return `<span class="pill ${c}">${fmt(s,0)}</span>`;}
+function ratePill(v,goodHigh=true,gT=.9,wT=.75){if(v==null)return "—";let c;if(goodHigh)c=v>=gT?"g":v>=wT?"w":"b";else c=v<=gT?"g":v<=wT?"w":"b";return `<span class="pill ${c}">${pct(v)}</span>`;}
+
+function columns(){
+  const M=window.EFFMAP||mapping, any=k=>results.some(r=>r[k]!=null);
+  const cols=[
+    {k:"name",l:"Employee",f:r=>`<span class="name-link" data-n="${esc(r.name)}">${esc(r.name)}</span>`},
+    {k:"score",l:"Score",f:r=>scorePill(r.score),show:any("score")},
+    {k:"rank",l:"Rank",f:r=>r.rank?`${r.rank} / ${r.of}`:"—",show:any("score")},
+    {k:"hours",l:"Hours",f:r=>fmt(r.hours)},
+    {k:"days",l:"Days",f:r=>r.days??"—",show:any("days")},
+    {k:"avgDay",l:"Hrs / day",f:r=>fmt(r.avgDay),show:any("avgDay")},
+    {k:"jobs",l:"Jobs",f:r=>r.jobs??"—",show:!!M.job},
+    {k:"hrsPerJob",l:"Hrs / job",f:r=>fmt(r.hrsPerJob),show:!!M.job},
+    {k:"eff",l:"Efficiency",f:r=>effPill(r.eff),show:any("eff")},
+    {k:"onBudget",l:"On budget",f:r=>pct(r.onBudget),show:any("onBudget")},
+    {k:"compRate",l:"Completion",f:r=>ratePill(r.compRate),show:any("compRate")},
+    {k:"callbacks",l:"Callbacks",f:r=>r.callbacks??"—",show:!!M.callback},
+    {k:"cbRate",l:"Callback rate",f:r=>ratePill(r.cbRate,false,.03,.08),show:!!M.callback},
+    {k:"inspPass",l:"Insp. pass",f:r=>ratePill(r.inspPass),show:any("inspPass")},
+    {k:"util",l:"Billable %",f:r=>ratePill(r.util,true,.8,.65),show:any("util")},
+    {k:"ot",l:"OT hrs",f:r=>fmt(r.ot),show:any("ot")},
+    {k:"rev",l:"Revenue",f:r=>money(r.rev),show:!!M.revenue},
+    {k:"revPerHr",l:"$ / hr",f:r=>money(r.revPerHr),show:!!M.revenue},
+    {k:"safety",l:"Safety inc.",f:r=>r.safety??"—",show:!!M.safety},
+  ];
+  return cols.filter(c=>c.show!==false);
+}
+
+function render(){
+  const T=window.TEAM, M=window.EFFMAP||mapping;
+  if(!M.employee&&!M.first&&!M.last){
+    $("#teamKpis").innerHTML=`<div class="kpi" style="grid-column:1/-1"><div class="v" style="color:var(--bad)">Pick the Employee name column above</div><div class="l">It couldn't be matched automatically.</div></div>`;
+    $("#teamTable thead").innerHTML="";$("#teamTable tbody").innerHTML="";return;
+  }
+  const k=[["Employees",results.length],["Total hours",fmt(T.totHours)]];
+  if(T.effAll!=null) k.push(["Team efficiency",pct(T.effAll)]);
+  if(T.compRate!=null) k.push(["Avg completion",pct(T.compRate)]);
+  if(T.cbRate!=null) k.push(["Avg callback rate",pct(T.cbRate,1)]);
+  if(T.util!=null) k.push(["Avg billable",pct(T.util)]);
+  if(T.ot!=null) k.push(["Avg OT hrs / person",fmt(T.ot)]);
+  if(T.score!=null) k.push(["Avg score",fmt(T.score,0)]);
+  $("#teamKpis").innerHTML=k.map(([l,v])=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+  const cols=columns();
+  const sorted=[...results].sort((a,b)=>{
+    let x=a[sortKey],y=b[sortKey];
+    if(sortKey==="name"){return sortAsc?String(x).localeCompare(y):String(y).localeCompare(x);}
+    if(sortKey==="rank"){x=x??1e9;y=y??1e9;return sortAsc?y-x:x-y;}
+    x=x??-Infinity;y=y??-Infinity;return sortAsc?x-y:y-x;
+  });
+  $("#teamTable thead").innerHTML="<tr>"+cols.map(c=>`<th data-k="${c.k}" class="${c.k===sortKey?"sorted"+(sortAsc?" asc":""):""}">${c.l}</th>`).join("")+"</tr>";
+  $("#teamTable tbody").innerHTML=sorted.map(r=>"<tr>"+cols.map(c=>`<td>${c.f(r)}</td>`).join("")+"</tr>").join("");
+  $("#teamTable thead").querySelectorAll("th").forEach(th=>th.onclick=()=>{const kk=th.dataset.k;if(sortKey===kk)sortAsc=!sortAsc;else{sortKey=kk;sortAsc=kk==="name";}render();});
+  $("#teamTable tbody").querySelectorAll(".name-link").forEach(a=>a.onclick=()=>openReport(a.dataset.n));
+}
+
+function cmp(v,t,higherBetter=true,isPct=true){
+  if(v==null||t==null) return "";
+  const d=v-t; if(Math.abs(d)<1e-9) return '<span class="hint">= team avg</span>';
+  const good=higherBetter?d>0:d<0;
+  const txt=isPct?(d>0?"+":"")+fmt(d*100,0)+" pts":(d>0?"+":"")+fmt(d);
+  return `<span style="color:${good?"var(--good)":"var(--bad)"};font-weight:600">${txt}</span> <span class="hint">vs team</span>`;
+}
+
+function notesFor(s){
+  const T=window.TEAM, n=[], target=(+$("#setTarget").value||100)/100;
+  const strengths=[],improve=[];
+  if(s.eff!=null){ if(s.eff>=target) strengths.push(`Finishes work at ${pct(s.eff)} of estimate — beats target ${pct(target)}.`); else improve.push(`Efficiency is ${pct(s.eff)} vs target ${pct(target)} (${fmt(Math.abs(s.hoursVar))} hrs over estimate across ${s.effRows} entries).`); }
+  if(s.compRate!=null){ if(s.compRate>=.9) strengths.push(`High completion rate (${pct(s.compRate)}).`); else if(s.compRate<.75) improve.push(`Completion rate is ${pct(s.compRate)} — review open / pending jobs.`); }
+  if(s.cbRate!=null){ if(s.callbacks===0) strengths.push(`No callbacks or rework recorded.`); else if(T.cbRate!=null&&s.cbRate>T.cbRate) improve.push(`${s.callbacks} callback(s) — rate ${pct(s.cbRate,1)} is above team average ${pct(T.cbRate,1)}.`); }
+  if(s.inspPass!=null){ if(s.inspPass>=.95) strengths.push(`Inspection pass rate ${pct(s.inspPass)}.`); else if(s.inspPass<.85) improve.push(`Inspection pass rate ${pct(s.inspPass)} — check for recurring code issues.`); }
+  if(s.util!=null){ if(s.util>=.8) strengths.push(`Strong billable utilization (${pct(s.util)}).`); else if(s.util<.65) improve.push(`Billable utilization is ${pct(s.util)} — look at drive time, shop time, waiting on materials.`); }
+  if(s.ot!=null&&s.ot>0&&T.ot!=null&&s.ot>T.ot*1.5&&s.ot>4) improve.push(`${fmt(s.ot)} overtime hours — well above team average (${fmt(T.ot)}). Check workload balance.`);
+  if(s.safety) improve.push(`${s.safety} safety incident(s) recorded.`);
+  if(s.tasks.length>1){
+    const withEff=s.tasks.filter(([,t])=>t.act>0&&t.n>=2).map(([k,t])=>[k,t.est/t.act]);
+    if(withEff.length>1){withEff.sort((a,b)=>b[1]-a[1]);strengths.push(`Most efficient at: ${withEff[0][0]} (${pct(withEff[0][1])}).`);if(withEff[withEff.length-1][1]<target)improve.push(`Slowest vs estimate on: ${withEff[withEff.length-1][0]} (${pct(withEff[withEff.length-1][1])}).`);}
+  }
+  return {strengths,improve};
+}
+
+function reportHTML(s){
+  const T=window.TEAM, M=window.EFFMAP||mapping;
+  const range=s.from?`${s.from.toLocaleDateString()} – ${s.to.toLocaleDateString()}`:"All records";
+  const rows=[];
+  const add=(l,v,c="")=>rows.push(`<tr><td>${l}</td><td>${v}</td><td>${c}</td></tr>`);
+  add("Total hours",fmt(s.hours),cmp(s.hours,T.hours,true,false));
+  if(s.days!=null) add("Days worked",s.days,"");
+  if(s.avgDay!=null) add("Avg hours / day",fmt(s.avgDay),cmp(s.avgDay,T.avgDay,true,false));
+  if(s.jobs!=null) add("Jobs / work orders",s.jobs,"");
+  if(s.hrsPerJob!=null) add("Avg hours / job",fmt(s.hrsPerJob),cmp(s.hrsPerJob,T.hrsPerJob,false,false));
+  if(s.ot!=null) add("Overtime hours",fmt(s.ot),cmp(s.ot,T.ot,false,false));
+  if(s.billH!=null) add("Billable hours",fmt(s.billH),"");
+  if(s.rev!=null) add("Revenue",money(s.rev),"");
+  if(s.revPerHr!=null) add("Revenue / hour",money(s.revPerHr),"");
+  const perf=[];
+  const addp=(l,v,c="")=>perf.push(`<tr><td>${l}</td><td>${v}</td><td>${c}</td></tr>`);
+  if(s.eff!=null){addp("Efficiency (est ÷ actual)",effPill(s.eff),cmp(s.eff,T.eff));addp("Estimated vs actual hrs",`${fmt(s.estH)} / ${fmt(s.actH)}`,"");addp("Jobs at/under estimate",pct(s.onBudget),cmp(s.onBudget,T.onBudget));}
+  if(s.compRate!=null) addp("Completion rate",ratePill(s.compRate),cmp(s.compRate,T.compRate));
+  if(s.callbacks!=null){addp("Callbacks / rework",s.callbacks,"");addp("Callback rate",ratePill(s.cbRate,false,.03,.08),cmp(s.cbRate,T.cbRate,false));}
+  if(s.inspPass!=null) addp("Inspection pass rate",ratePill(s.inspPass),cmp(s.inspPass,T.inspPass));
+  if(s.util!=null) addp("Billable utilization",ratePill(s.util,true,.8,.65),cmp(s.util,T.util));
+  if(s.safety!=null) addp("Safety incidents",s.safety,"");
+  const {strengths,improve}=notesFor(s);
+  const taskRows=s.tasks.slice(0,12).map(([k,t])=>`<tr><td>${esc(k)}</td><td>${t.n}</td><td>${fmt(t.h)}</td><td>${t.act?effPill(t.est/t.act):"—"}</td></tr>`).join("");
+  return `<div class="report">
+    <div class="head">
+      <div><h3>${esc(s.name)}</h3><div class="sub">${range} · ${s.entries} records${s.rank?` · Rank ${s.rank} of ${s.of}`:""}</div></div>
+      ${s.score!=null?`<div style="text-align:right"><div class="score">${fmt(s.score,0)}</div><div class="hint">Performance score / 100</div></div>`:""}
+    </div>
+    <div class="two">
+      <div><h4>Workload</h4><table><tbody>${rows.join("")}</tbody></table></div>
+      <div><h4>Performance &amp; efficiency</h4>${perf.length?`<table><tbody>${perf.join("")}</tbody></table>`:`<p class="hint">Add estimated hours, status, callback or billable columns to see performance metrics.</p>`}</div>
+    </div>
+    <div class="two">
+      <div><h4>Strengths</h4><ul class="notes">${strengths.length?strengths.map(x=>`<li>${esc(x)}</li>`).join(""):"<li class='hint'>—</li>"}</ul></div>
+      <div><h4>Areas to improve</h4><ul class="notes">${improve.length?improve.map(x=>`<li>${esc(x)}</li>`).join(""):"<li class='hint'>Nothing flagged.</li>"}</ul></div>
+    </div>
+    ${M.task?`<h4>By task / work type</h4><table><thead><tr><th>Task</th><th>Entries</th><th>Hours</th><th>Efficiency</th></tr></thead><tbody>${taskRows}</tbody></table>`:""}
+    <p class="hint" style="margin-top:14px">Generated ${new Date().toLocaleString()} from: ${esc(s.files.join(", "))}</p>
+  </div>`;
+}
+
+function openReport(name){
+  const s=results.find(r=>r.name===name); if(!s) return;
+  const bg=document.createElement("div"); bg.className="modal-bg";
+  bg.innerHTML=`<div class="modal"><div class="modal-bar"><button class="btn primary" id="mCsv">Export CSV</button><button class="btn" id="mHtml">Export HTML</button><button class="btn" id="mPrint">Print / PDF</button><button class="btn" id="mClose">Close</button></div>${reportHTML(s)}</div>`;
+  document.body.appendChild(bg);
+  bg.addEventListener("click",e=>{if(e.target===bg)bg.remove();});
+  bg.querySelector("#mClose").onclick=()=>bg.remove();
+  bg.querySelector("#mCsv").onclick=()=>download(fileSafe(s.name)+"_summary.csv",toCSV(employeeCSV(s)),"text/csv");
+  bg.querySelector("#mHtml").onclick=()=>download(fileSafe(s.name)+"_summary.html",standalone([s]),"text/html");
+  bg.querySelector("#mPrint").onclick=()=>printReports([s]);
+}
+
+/* ================= Export ================= */
+function fileSafe(s){return s.replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_")||"employee";}
+function download(name,content,type){
+  const blob=new Blob([type==="text/csv"?"﻿"+content:content],{type:type+";charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+}
+const r1=v=>v==null||isNaN(v)?"":Math.round(v*10)/10;
+const p1=v=>v==null||isNaN(v)?"":Math.round(v*1000)/10;
+function teamRows(){
+  const head=["Employee","Score","Rank","Total Hours","Days Worked","Avg Hrs/Day","Jobs","Avg Hrs/Job","Estimated Hrs","Actual Hrs (on est. jobs)","Efficiency %","At/Under Estimate %","Completion %","Callbacks","Callback Rate %","Inspection Pass %","Billable Hrs","Billable %","Overtime Hrs","Revenue","Revenue/Hr","Safety Incidents","First Date","Last Date","Records"];
+  const rows=[...results].sort((a,b)=>(b.score??-1)-(a.score??-1)||a.name.localeCompare(b.name)).map(s=>[
+    s.name,r1(s.score),s.rank||"",r1(s.hours),s.days??"",r1(s.avgDay),s.jobs??"",r1(s.hrsPerJob),s.effRows?r1(s.estH):"",s.effRows?r1(s.actH):"",p1(s.eff),p1(s.onBudget),p1(s.compRate),s.callbacks??"",p1(s.cbRate),p1(s.inspPass),r1(s.billH),p1(s.util),r1(s.ot),s.rev!=null?Math.round(s.rev):"",r1(s.revPerHr),s.safety??"",s.from?dkey(s.from):"",s.to?dkey(s.to):"",s.entries]);
+  // drop entirely empty columns
+  const keep=head.map((_,i)=>i<4||rows.some(r=>r[i]!==""&&r[i]!=null));
+  return [head,...rows].map(r=>r.filter((_,i)=>keep[i]));
+}
+function employeeCSV(s){
+  const T=window.TEAM; const out=[["Employee Performance Summary"],["Employee",s.name],["Period",s.from?dkey(s.from)+" to "+dkey(s.to):"All records"],["Score",r1(s.score)],["Rank",s.rank?`${s.rank} of ${s.of}`:""],[],["Metric","Value","Team Average"]];
+  const add=(l,v,t)=>{if(v!==""&&v!=null)out.push([l,v,t??""]);};
+  add("Total Hours",r1(s.hours),r1(T.hours)); add("Days Worked",s.days,r1(T.days)); add("Avg Hours/Day",r1(s.avgDay),r1(T.avgDay));
+  add("Jobs",s.jobs,r1(T.jobs)); add("Avg Hours/Job",r1(s.hrsPerJob),r1(T.hrsPerJob));
+  if(s.effRows){add("Estimated Hours",r1(s.estH));add("Actual Hours (estimated jobs)",r1(s.actH));add("Efficiency %",p1(s.eff),p1(T.eff));add("At/Under Estimate %",p1(s.onBudget),p1(T.onBudget));}
+  add("Completion %",p1(s.compRate),p1(T.compRate)); add("Callbacks",s.callbacks); add("Callback Rate %",p1(s.cbRate),p1(T.cbRate));
+  add("Inspection Pass %",p1(s.inspPass),p1(T.inspPass)); add("Billable Hours",r1(s.billH)); add("Billable %",p1(s.util),p1(T.util));
+  add("Overtime Hours",r1(s.ot),r1(T.ot)); if(s.rev!=null){add("Revenue",Math.round(s.rev),Math.round(T.rev));add("Revenue/Hour",r1(s.revPerHr),r1(T.revPerHr));} add("Safety Incidents",s.safety);
+  const {strengths,improve}=notesFor(s);
+  out.push([],["Strengths"]); strengths.forEach(x=>out.push(["",x])); if(!strengths.length)out.push(["","—"]);
+  out.push([],["Areas to Improve"]); improve.forEach(x=>out.push(["",x])); if(!improve.length)out.push(["","Nothing flagged"]);
+  if((window.EFFMAP||mapping).task){out.push([],["Task / Work Type","Entries","Hours","Efficiency %"]);s.tasks.forEach(([k,t])=>out.push([k,t.n,r1(t.h),t.act?p1(t.est/t.act):""]));}
+  return out;
+}
+function standalone(list){
+  const css=document.querySelector("style").textContent.replace(/@media print\{[\s\S]*?\n  \}\n/,"@media print{.report{border:0;page-break-after:always}.pill{-webkit-print-color-adjust:exact;print-color-adjust:exact}}\n");
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Performance Summary${list.length===1?" – "+esc(list[0].name):"s"}</title><style>${css}body{padding:24px}</style></head><body><main>${list.map(reportHTML).join("")}</main></body></html>`;
+}
+function printReports(list){
+  $("#printArea").innerHTML=list.map(reportHTML).join("");
+  setTimeout(()=>window.print(),50);
+}
+$("#exportTeam").onclick=()=>download(`team_performance_summary_${dkey(new Date())}.csv`,toCSV(teamRows()),"text/csv");
+$("#exportEach").onclick=async()=>{
+  const list=[...results].sort((a,b)=>a.name.localeCompare(b.name));
+  for(const s of list){download(fileSafe(s.name)+"_summary.csv",toCSV(employeeCSV(s)),"text/csv");await new Promise(r=>setTimeout(r,250));}
+};
+$("#exportHtml").onclick=()=>download(`all_employee_reports_${dkey(new Date())}.html`,standalone([...results].sort((a,b)=>a.name.localeCompare(b.name))),"text/html");
+$("#printAll").onclick=()=>printReports([...results].sort((a,b)=>a.name.localeCompare(b.name)));
+
+/* ================= Sample data ================= */
+$("#sampleBtn").onclick=()=>{
+  const names=["Mike Torres","Sarah Chen","Dave Kowalski","Jamal Brooks","Lisa Moreno"];
+  const tasks=[["Panel upgrade",8],["Service call",2],["Rough-in",6],["Lighting install",3],["EV charger install",5],["Troubleshooting",2.5],["Trim-out",4]];
+  const skill={"Mike Torres":1.05,"Sarah Chen":1.18,"Dave Kowalski":0.86,"Jamal Brooks":0.97,"Lisa Moreno":1.1};
+  let seed=7; const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+  let wo=4100; const lines=[["Date","Employee","Work Order","Task","Estimated Hours","Actual Hours","Billable Hours","Status","Callback","Inspection","Revenue"]];
+  const start=new Date(); start.setDate(start.getDate()-27);
+  for(let d=0;d<28;d++){
+    const day=new Date(start); day.setDate(start.getDate()+d); if(day.getDay()===0||day.getDay()===6) continue;
+    for(const n of names){
+      let left=8+(n==="Dave Kowalski"&&rnd()<.4?2.5:0)+(rnd()<.15?1.5:0);
+      while(left>1){
+        const [t,e]=tasks[Math.floor(rnd()*tasks.length)];
+        let act=Math.round(e/skill[n]*(0.8+rnd()*0.4)*4)/4; act=Math.min(act,left); left-=act;
+        const status=rnd()<(n==="Dave Kowalski"?.82:.94)?"Completed":"In Progress";
+        const cb=rnd()<(n==="Dave Kowalski"?.09:n==="Sarah Chen"?.01:.04)?"Yes":"No";
+        const insp=/Panel|Rough|EV/.test(t)?(rnd()<(cb==="Yes"?.5:.95)?"Pass":"Fail"):"";
+        const bill=Math.round(act*(0.7+rnd()*0.3)*4)/4;
+        lines.push([dkey(day),n,"WO-"+(wo++),t,e,act,bill,status,cb,insp,Math.round(e*95+rnd()*120)]);
+      }
+    }
+  }
+  loadText("sample_timesheets.csv",toCSV(lines)); refresh();
+};
+</script>
+</body>
+</html>

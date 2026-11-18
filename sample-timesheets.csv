@@ -1,0 +1,218 @@
+Date,Employee,Work Order,Task,Estimated Hours,Actual Hours,Billable Hours,Status,Callback,Inspection,Revenue
+2026-10-22,Mike Torres,WO-4100,Lighting install,3,2.5,2.25,Completed,No,,294
+2026-10-22,Mike Torres,WO-4101,Trim-out,4,4,3.75,Completed,No,,459
+2026-10-22,Mike Torres,WO-4102,Panel upgrade,8,1.5,1.25,Completed,No,Pass,818
+2026-10-22,Sarah Chen,WO-4103,Panel upgrade,8,8,8,In Progress,No,Pass,783
+2026-10-22,Dave Kowalski,WO-4104,EV charger install,5,5.25,4,Completed,No,Pass,541
+2026-10-22,Dave Kowalski,WO-4105,Rough-in,6,2.75,2,Completed,No,Pass,681
+2026-10-22,Jamal Brooks,WO-4106,Trim-out,4,4,3.25,Completed,No,,471
+2026-10-22,Jamal Brooks,WO-4107,EV charger install,5,4,2.75,Completed,No,Pass,524
+2026-10-22,Lisa Moreno,WO-4108,EV charger install,5,5.25,4.25,Completed,No,Pass,576
+2026-10-22,Lisa Moreno,WO-4109,Lighting install,3,2.75,2.5,Completed,No,,301
+2026-10-23,Mike Torres,WO-4110,Troubleshooting,2.5,2.75,2.75,In Progress,No,,327
+2026-10-23,Mike Torres,WO-4111,EV charger install,5,4.75,3.75,Completed,No,Pass,522
+2026-10-23,Sarah Chen,WO-4112,Troubleshooting,2.5,2,1.5,In Progress,Yes,,308
+2026-10-23,Sarah Chen,WO-4113,Lighting install,3,2,2,In Progress,No,,355
+2026-10-23,Sarah Chen,WO-4114,Lighting install,3,2.25,1.75,Completed,No,,288
+2026-10-23,Sarah Chen,WO-4115,Service call,2,1.75,1.75,Completed,No,,218
+2026-10-23,Dave Kowalski,WO-4116,Panel upgrade,8,7.75,7.5,Completed,No,Pass,777
+2026-10-23,Jamal Brooks,WO-4117,Panel upgrade,8,7.5,5.75,Completed,No,Pass,796
+2026-10-23,Lisa Moreno,WO-4118,Panel upgrade,8,6.25,5.25,Completed,No,Pass,773
+2026-10-23,Lisa Moreno,WO-4119,Lighting install,3,1.75,1.5,Completed,No,,374
+2026-10-26,Mike Torres,WO-4120,Trim-out,4,4.25,3.5,Completed,No,,389
+2026-10-26,Mike Torres,WO-4121,Trim-out,4,3.25,2.5,Completed,No,,384
+2026-10-26,Sarah Chen,WO-4122,Lighting install,3,2.5,2.25,Completed,No,,336
+2026-10-26,Sarah Chen,WO-4123,Panel upgrade,8,5.5,5,Completed,No,Pass,815
+2026-10-26,Dave Kowalski,WO-4124,Rough-in,6,7,6,Completed,No,Pass,689
+2026-10-26,Jamal Brooks,WO-4125,Troubleshooting,2.5,2.5,2.25,Completed,No,,316
+2026-10-26,Jamal Brooks,WO-4126,Rough-in,6,5.5,5.25,Completed,No,Pass,657
+2026-10-26,Lisa Moreno,WO-4127,Rough-in,6,5.5,5,In Progress,No,Pass,590
+2026-10-26,Lisa Moreno,WO-4128,Service call,2,1.75,1.75,Completed,Yes,,252
+2026-10-26,Lisa Moreno,WO-4129,Panel upgrade,8,2.25,2,Completed,No,Pass,797
+2026-10-27,Mike Torres,WO-4130,EV charger install,5,4.5,3.75,Completed,No,Pass,582
+2026-10-27,Mike Torres,WO-4131,Lighting install,3,2.5,2,Completed,No,,333
+2026-10-27,Sarah Chen,WO-4132,Rough-in,6,4,3.5,Completed,No,Pass,678
+2026-10-27,Sarah Chen,WO-4133,Panel upgrade,8,4,3,Completed,No,Pass,847
+2026-10-27,Dave Kowalski,WO-4134,Lighting install,3,3.25,3,Completed,No,,344
+2026-10-27,Dave Kowalski,WO-4135,Service call,2,2.5,2,In Progress,No,,304
+2026-10-27,Dave Kowalski,WO-4136,Troubleshooting,2.5,2.75,2,Completed,No,,324
+2026-10-27,Jamal Brooks,WO-4137,Trim-out,4,3.75,2.75,Completed,No,,490
+2026-10-27,Jamal Brooks,WO-4138,EV charger install,5,4.25,3.25,Completed,No,Pass,560
+2026-10-27,Lisa Moreno,WO-4139,EV charger install,5,4.25,3.25,Completed,No,Pass,522
+2026-10-27,Lisa Moreno,WO-4140,Troubleshooting,2.5,2.5,2.25,Completed,No,,284
+2026-10-27,Lisa Moreno,WO-4141,Panel upgrade,8,1.25,1.25,Completed,No,Pass,814
+2026-10-28,Mike Torres,WO-4142,Lighting install,3,2.5,2,Completed,No,,314
+2026-10-28,Mike Torres,WO-4143,Panel upgrade,8,5.5,4.75,Completed,No,Pass,825
+2026-10-28,Sarah Chen,WO-4144,Lighting install,3,2.25,1.75,Completed,No,,348
+2026-10-28,Sarah Chen,WO-4145,Lighting install,3,2.25,2,Completed,No,,296
+2026-10-28,Sarah Chen,WO-4146,Panel upgrade,8,5,3.75,Completed,Yes,Fail,771
+2026-10-28,Dave Kowalski,WO-4147,EV charger install,5,7,6.75,In Progress,No,Pass,594
+2026-10-28,Dave Kowalski,WO-4148,Troubleshooting,2.5,3.25,2.25,Completed,No,,275
+2026-10-28,Jamal Brooks,WO-4149,Panel upgrade,8,8,7,Completed,No,Pass,777
+2026-10-28,Lisa Moreno,WO-4150,EV charger install,5,3.75,2.75,Completed,No,Pass,506
+2026-10-28,Lisa Moreno,WO-4151,Lighting install,3,2.75,2,Completed,No,,327
+2026-10-28,Lisa Moreno,WO-4152,Panel upgrade,8,1.5,1.25,Completed,No,Pass,772
+2026-10-29,Mike Torres,WO-4153,Rough-in,6,6.5,5.75,Completed,No,Pass,613
+2026-10-29,Mike Torres,WO-4154,Troubleshooting,2.5,1.5,1.25,Completed,No,,311
+2026-10-29,Sarah Chen,WO-4155,Lighting install,3,3,2.5,Completed,No,,312
+2026-10-29,Sarah Chen,WO-4156,Troubleshooting,2.5,2.25,1.75,Completed,No,,292
+2026-10-29,Sarah Chen,WO-4157,Troubleshooting,2.5,1.75,1.25,Completed,No,,292
+2026-10-29,Dave Kowalski,WO-4158,Panel upgrade,8,8,7.5,Completed,No,Pass,811
+2026-10-29,Jamal Brooks,WO-4159,Troubleshooting,2.5,2.25,2.25,In Progress,No,,265
+2026-10-29,Jamal Brooks,WO-4160,Rough-in,6,5.75,4.75,Completed,No,Pass,616
+2026-10-29,Lisa Moreno,WO-4161,Service call,2,2,1.5,Completed,No,,266
+2026-10-29,Lisa Moreno,WO-4162,Panel upgrade,8,6,4.75,Completed,No,Pass,760
+2026-10-30,Mike Torres,WO-4163,EV charger install,5,4.25,4,Completed,No,Pass,551
+2026-10-30,Mike Torres,WO-4164,Rough-in,6,3.75,3.5,Completed,No,Pass,674
+2026-10-30,Sarah Chen,WO-4165,Panel upgrade,8,5.5,3.75,Completed,No,Fail,763
+2026-10-30,Sarah Chen,WO-4166,Service call,2,1.75,1.25,Completed,No,,247
+2026-10-30,Dave Kowalski,WO-4167,Panel upgrade,8,9.5,7.5,Completed,No,Pass,866
+2026-10-30,Jamal Brooks,WO-4168,EV charger install,5,4.25,4,Completed,No,Pass,545
+2026-10-30,Jamal Brooks,WO-4169,Troubleshooting,2.5,3,2.25,Completed,No,,318
+2026-10-30,Lisa Moreno,WO-4170,Troubleshooting,2.5,2.25,1.75,Completed,No,,348
+2026-10-30,Lisa Moreno,WO-4171,Trim-out,4,3,2.75,Completed,No,,498
+2026-10-30,Lisa Moreno,WO-4172,Troubleshooting,2.5,2,1.75,Completed,No,,335
+2026-11-02,Mike Torres,WO-4173,Rough-in,6,6.5,6,Completed,No,Pass,641
+2026-11-02,Mike Torres,WO-4174,Panel upgrade,8,1.5,1.25,In Progress,No,Pass,805
+2026-11-02,Sarah Chen,WO-4175,Rough-in,6,4.5,3.5,Completed,No,Pass,603
+2026-11-02,Sarah Chen,WO-4176,Lighting install,3,2.5,2,Completed,No,,293
+2026-11-02,Sarah Chen,WO-4177,Service call,2,1.5,1.25,Completed,No,,199
+2026-11-02,Dave Kowalski,WO-4178,Trim-out,4,4.5,3.25,Completed,No,,489
+2026-11-02,Dave Kowalski,WO-4179,Lighting install,3,3.25,2.5,Completed,Yes,,361
+2026-11-02,Jamal Brooks,WO-4180,Service call,2,2.25,1.75,Completed,No,,269
+2026-11-02,Jamal Brooks,WO-4181,EV charger install,5,5.75,5.5,Completed,No,Pass,562
+2026-11-02,Lisa Moreno,WO-4182,Trim-out,4,3,3,Completed,No,,498
+2026-11-02,Lisa Moreno,WO-4183,Service call,2,1.5,1.25,Completed,No,,300
+2026-11-02,Lisa Moreno,WO-4184,Panel upgrade,8,3.5,3.25,Completed,No,Pass,857
+2026-11-03,Mike Torres,WO-4185,Lighting install,3,3,2.75,Completed,No,,304
+2026-11-03,Mike Torres,WO-4186,Panel upgrade,8,5,4.5,Completed,Yes,Pass,774
+2026-11-03,Sarah Chen,WO-4187,Lighting install,3,3,2.75,Completed,No,,327
+2026-11-03,Sarah Chen,WO-4188,Rough-in,6,4.25,3.25,Completed,No,Pass,641
+2026-11-03,Dave Kowalski,WO-4189,Trim-out,4,4.5,4.25,Completed,No,,406
+2026-11-03,Dave Kowalski,WO-4190,Service call,2,2.75,2,Completed,No,,240
+2026-11-03,Dave Kowalski,WO-4191,Panel upgrade,8,3.25,2.5,Completed,No,Pass,782
+2026-11-03,Jamal Brooks,WO-4192,Rough-in,6,7,5,Completed,No,Pass,658
+2026-11-03,Lisa Moreno,WO-4193,Trim-out,4,3.75,3.75,In Progress,No,,402
+2026-11-03,Lisa Moreno,WO-4194,Troubleshooting,2.5,1.75,1.5,Completed,No,,341
+2026-11-03,Lisa Moreno,WO-4195,Lighting install,3,2.5,2,Completed,No,,362
+2026-11-04,Mike Torres,WO-4196,Troubleshooting,2.5,2.5,2.5,Completed,No,,298
+2026-11-04,Mike Torres,WO-4197,Troubleshooting,2.5,2.25,2.25,Completed,No,,273
+2026-11-04,Mike Torres,WO-4198,EV charger install,5,3.25,2.75,Completed,No,Pass,574
+2026-11-04,Sarah Chen,WO-4199,EV charger install,5,3.75,3,Completed,No,Pass,531
+2026-11-04,Sarah Chen,WO-4200,Trim-out,4,3.75,3.5,Completed,No,,497
+2026-11-04,Dave Kowalski,WO-4201,Panel upgrade,8,10.5,10.25,Completed,No,Pass,851
+2026-11-04,Dave Kowalski,WO-4202,Panel upgrade,8,1.5,1.25,Completed,No,Pass,794
+2026-11-04,Jamal Brooks,WO-4203,Troubleshooting,2.5,2.5,2.25,Completed,No,,303
+2026-11-04,Jamal Brooks,WO-4204,Service call,2,1.75,1.5,Completed,No,,207
+2026-11-04,Jamal Brooks,WO-4205,Panel upgrade,8,5.25,4,Completed,No,Pass,817
+2026-11-04,Lisa Moreno,WO-4206,Service call,2,2.25,2.25,Completed,No,,204
+2026-11-04,Lisa Moreno,WO-4207,EV charger install,5,4.75,4.25,Completed,No,Pass,585
+2026-11-05,Mike Torres,WO-4208,Lighting install,3,2.5,2,Completed,No,,327
+2026-11-05,Mike Torres,WO-4209,Service call,2,1.75,1.75,Completed,No,,191
+2026-11-05,Mike Torres,WO-4210,Rough-in,6,3.75,3.25,Completed,No,Pass,632
+2026-11-05,Sarah Chen,WO-4211,EV charger install,5,5,4.5,Completed,No,Pass,478
+2026-11-05,Sarah Chen,WO-4212,EV charger install,5,3,2.75,Completed,No,Pass,534
+2026-11-05,Dave Kowalski,WO-4213,Lighting install,3,3,3,Completed,No,,384
+2026-11-05,Dave Kowalski,WO-4214,Rough-in,6,5,4.25,Completed,No,Pass,676
+2026-11-05,Jamal Brooks,WO-4215,Panel upgrade,8,8,7.75,Completed,Yes,Pass,817
+2026-11-05,Lisa Moreno,WO-4216,EV charger install,5,5.25,5,Completed,No,Pass,503
+2026-11-05,Lisa Moreno,WO-4217,Lighting install,3,2.75,2.75,Completed,No,,364
+2026-11-06,Mike Torres,WO-4218,Panel upgrade,8,7.75,7.75,Completed,No,Pass,788
+2026-11-06,Mike Torres,WO-4219,Trim-out,4,1.75,1.5,Completed,No,,381
+2026-11-06,Sarah Chen,WO-4220,EV charger install,5,3.5,2.75,Completed,No,Pass,592
+2026-11-06,Sarah Chen,WO-4221,Rough-in,6,4.5,3.5,Completed,No,Pass,641
+2026-11-06,Dave Kowalski,WO-4222,Trim-out,4,4.75,3.25,In Progress,Yes,,492
+2026-11-06,Dave Kowalski,WO-4223,Service call,2,2.5,2,Completed,Yes,,282
+2026-11-06,Jamal Brooks,WO-4224,EV charger install,5,4.75,4.5,Completed,No,Pass,564
+2026-11-06,Jamal Brooks,WO-4225,Trim-out,4,3.25,3,Completed,No,,406
+2026-11-06,Lisa Moreno,WO-4226,EV charger install,5,4.5,3.75,Completed,No,Pass,485
+2026-11-06,Lisa Moreno,WO-4227,Rough-in,6,4.5,4.25,Completed,No,Pass,578
+2026-11-09,Mike Torres,WO-4228,Service call,2,2,2,Completed,No,,219
+2026-11-09,Mike Torres,WO-4229,Trim-out,4,3.25,2.25,Completed,No,,461
+2026-11-09,Mike Torres,WO-4230,Service call,2,2.25,2.25,Completed,No,,203
+2026-11-09,Sarah Chen,WO-4231,Trim-out,4,4,3.75,Completed,No,,489
+2026-11-09,Sarah Chen,WO-4232,Troubleshooting,2.5,1.75,1.25,Completed,No,,343
+2026-11-09,Sarah Chen,WO-4233,EV charger install,5,2.25,2,Completed,No,Pass,488
+2026-11-09,Dave Kowalski,WO-4234,Panel upgrade,8,8,6,Completed,No,Pass,872
+2026-11-09,Jamal Brooks,WO-4235,Rough-in,6,6.25,4.75,Completed,No,Pass,677
+2026-11-09,Jamal Brooks,WO-4236,Service call,2,1.75,1.75,Completed,No,,261
+2026-11-09,Lisa Moreno,WO-4237,EV charger install,5,3.75,3,Completed,No,Pass,477
+2026-11-09,Lisa Moreno,WO-4238,Rough-in,6,4.25,3,Completed,No,Pass,589
+2026-11-10,Mike Torres,WO-4239,Service call,2,1.75,1.75,Completed,No,,253
+2026-11-10,Mike Torres,WO-4240,Lighting install,3,2.5,2.25,Completed,No,,370
+2026-11-10,Mike Torres,WO-4241,Troubleshooting,2.5,2.75,2,Completed,No,,356
+2026-11-10,Mike Torres,WO-4242,Lighting install,3,2.5,2.25,Completed,No,,369
+2026-11-10,Sarah Chen,WO-4243,Lighting install,3,2.5,2,Completed,No,,291
+2026-11-10,Sarah Chen,WO-4244,Trim-out,4,3,2.75,Completed,No,,460
+2026-11-10,Sarah Chen,WO-4245,Lighting install,3,2.5,2.25,Completed,No,,397
+2026-11-10,Dave Kowalski,WO-4246,Lighting install,3,3.25,3,Completed,No,,396
+2026-11-10,Dave Kowalski,WO-4247,Lighting install,3,3,3,Completed,No,,359
+2026-11-10,Dave Kowalski,WO-4248,Lighting install,3,3.25,3,Completed,Yes,,334
+2026-11-10,Jamal Brooks,WO-4249,Lighting install,3,3.5,3,Completed,No,,378
+2026-11-10,Jamal Brooks,WO-4250,Trim-out,4,3.5,3,Completed,No,,469
+2026-11-10,Lisa Moreno,WO-4251,Troubleshooting,2.5,1.75,1.25,Completed,No,,314
+2026-11-10,Lisa Moreno,WO-4252,Panel upgrade,8,6.25,5.5,Completed,No,Fail,834
+2026-11-11,Mike Torres,WO-4253,EV charger install,5,5,5,Completed,No,Pass,563
+2026-11-11,Mike Torres,WO-4254,Trim-out,4,3,2.25,Completed,No,,464
+2026-11-11,Sarah Chen,WO-4255,Panel upgrade,8,6.25,5.25,Completed,No,Pass,763
+2026-11-11,Sarah Chen,WO-4256,Troubleshooting,2.5,1.75,1.25,Completed,No,,269
+2026-11-11,Dave Kowalski,WO-4257,Trim-out,4,4,3.75,Completed,No,,432
+2026-11-11,Dave Kowalski,WO-4258,Rough-in,6,4,4,Completed,Yes,Pass,632
+2026-11-11,Jamal Brooks,WO-4259,Service call,2,1.75,1.5,Completed,No,,263
+2026-11-11,Jamal Brooks,WO-4260,EV charger install,5,4.25,3,Completed,No,Pass,581
+2026-11-11,Jamal Brooks,WO-4261,Trim-out,4,2,1.5,Completed,No,,404
+2026-11-11,Lisa Moreno,WO-4262,Service call,2,1.5,1.5,Completed,No,,309
+2026-11-11,Lisa Moreno,WO-4263,Troubleshooting,2.5,2.75,2.25,Completed,Yes,,335
+2026-11-11,Lisa Moreno,WO-4264,Service call,2,1.5,1,Completed,No,,306
+2026-11-11,Lisa Moreno,WO-4265,Troubleshooting,2.5,1.75,1.25,Completed,No,,331
+2026-11-11,Lisa Moreno,WO-4266,Panel upgrade,8,2,1.75,Completed,No,Pass,778
+2026-11-12,Mike Torres,WO-4267,Service call,2,1.75,1.5,Completed,No,,278
+2026-11-12,Mike Torres,WO-4268,Rough-in,6,5.25,3.75,Completed,No,Pass,650
+2026-11-12,Sarah Chen,WO-4269,Lighting install,3,2.25,2,Completed,No,,360
+2026-11-12,Sarah Chen,WO-4270,EV charger install,5,4,3.25,In Progress,No,Pass,517
+2026-11-12,Sarah Chen,WO-4271,Panel upgrade,8,1.75,1.75,Completed,No,Pass,863
+2026-11-12,Dave Kowalski,WO-4272,Panel upgrade,8,9.5,9.25,Completed,No,Pass,760
+2026-11-12,Jamal Brooks,WO-4273,Rough-in,6,6.5,4.75,Completed,No,Pass,577
+2026-11-12,Jamal Brooks,WO-4274,Rough-in,6,1.5,1.5,Completed,No,Pass,620
+2026-11-12,Lisa Moreno,WO-4275,Rough-in,6,4.75,4,Completed,No,Pass,650
+2026-11-12,Lisa Moreno,WO-4276,Lighting install,3,2.75,2,Completed,No,,327
+2026-11-13,Mike Torres,WO-4277,Lighting install,3,2.75,2.5,Completed,No,,329
+2026-11-13,Mike Torres,WO-4278,Service call,2,2.25,1.75,Completed,No,,264
+2026-11-13,Mike Torres,WO-4279,Panel upgrade,8,3,2.5,Completed,No,Pass,827
+2026-11-13,Sarah Chen,WO-4280,Panel upgrade,8,5.75,5.25,Completed,No,Pass,854
+2026-11-13,Sarah Chen,WO-4281,Service call,2,2,1.5,Completed,No,,240
+2026-11-13,Dave Kowalski,WO-4282,Lighting install,3,3.5,2.75,Completed,No,,326
+2026-11-13,Dave Kowalski,WO-4283,Rough-in,6,7,6,Completed,No,Pass,641
+2026-11-13,Jamal Brooks,WO-4284,Rough-in,6,6.5,5.5,Completed,No,Pass,615
+2026-11-13,Jamal Brooks,WO-4285,Lighting install,3,1.5,1,Completed,No,,390
+2026-11-13,Lisa Moreno,WO-4286,EV charger install,5,5.5,5,Completed,No,Pass,569
+2026-11-13,Lisa Moreno,WO-4287,Trim-out,4,3.25,2.75,Completed,No,,403
+2026-11-16,Mike Torres,WO-4288,Panel upgrade,8,8,6.5,Completed,No,Pass,787
+2026-11-16,Sarah Chen,WO-4289,Trim-out,4,3.75,2.75,In Progress,No,,398
+2026-11-16,Sarah Chen,WO-4290,EV charger install,5,4.5,3.25,Completed,No,Pass,562
+2026-11-16,Sarah Chen,WO-4291,Panel upgrade,8,1.25,1,Completed,No,Pass,837
+2026-11-16,Dave Kowalski,WO-4292,EV charger install,5,6.5,5.25,Completed,No,Pass,529
+2026-11-16,Dave Kowalski,WO-4293,Rough-in,6,5.5,4.75,In Progress,Yes,Fail,587
+2026-11-16,Jamal Brooks,WO-4294,Lighting install,3,2.75,2.25,Completed,No,,345
+2026-11-16,Jamal Brooks,WO-4295,Rough-in,6,5.25,4,Completed,Yes,Fail,664
+2026-11-16,Lisa Moreno,WO-4296,Trim-out,4,3,2.25,Completed,No,,392
+2026-11-16,Lisa Moreno,WO-4297,Panel upgrade,8,5,3.5,In Progress,No,Pass,875
+2026-11-17,Mike Torres,WO-4298,Troubleshooting,2.5,2.25,2.25,Completed,No,,298
+2026-11-17,Mike Torres,WO-4299,Troubleshooting,2.5,2,1.75,Completed,No,,261
+2026-11-17,Mike Torres,WO-4300,Rough-in,6,3.75,3.5,Completed,No,Pass,675
+2026-11-17,Sarah Chen,WO-4301,Panel upgrade,8,7.5,6.5,Completed,No,Pass,824
+2026-11-17,Dave Kowalski,WO-4302,Lighting install,3,3.75,2.75,Completed,No,,305
+2026-11-17,Dave Kowalski,WO-4303,Service call,2,2.75,2.5,Completed,No,,283
+2026-11-17,Dave Kowalski,WO-4304,Service call,2,1.5,1.25,Completed,Yes,,289
+2026-11-17,Jamal Brooks,WO-4305,Panel upgrade,8,7.5,6.25,Completed,No,Pass,854
+2026-11-17,Lisa Moreno,WO-4306,Panel upgrade,8,8,8,Completed,No,Pass,817
+2026-11-18,Mike Torres,WO-4307,Trim-out,4,4.5,3.25,Completed,No,,453
+2026-11-18,Mike Torres,WO-4308,Panel upgrade,8,5,4.5,Completed,No,Pass,791
+2026-11-18,Sarah Chen,WO-4309,Service call,2,1.5,1.5,Completed,No,,193
+2026-11-18,Sarah Chen,WO-4310,Rough-in,6,4.5,4,Completed,No,Pass,613
+2026-11-18,Sarah Chen,WO-4311,Troubleshooting,2.5,2,1.75,Completed,No,,308
+2026-11-18,Dave Kowalski,WO-4312,Panel upgrade,8,10.5,9.5,Completed,No,Pass,865
+2026-11-18,Dave Kowalski,WO-4313,EV charger install,5,1.5,1.25,Completed,No,Fail,524
+2026-11-18,Jamal Brooks,WO-4314,Trim-out,4,3.25,3,Completed,No,,494
+2026-11-18,Jamal Brooks,WO-4315,Rough-in,6,4.75,4,Completed,No,Pass,642
+2026-11-18,Lisa Moreno,WO-4316,Panel upgrade,8,8,7.75,Completed,No,Pass,804
