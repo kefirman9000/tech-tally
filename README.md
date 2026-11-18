@@ -4,7 +4,7 @@ A single-file, offline tool that turns timesheet / work-order CSVs into a **perf
 
 **▶ Live page:** https://kefirman9000.github.io/tech-tally/
 
-Everything runs in your browser. No data is uploaded anywhere — you can also download `index.html` and open it with no internet connection.
+Dark mode by default (toggle top-right). Everything runs in your browser. No data is uploaded anywhere — you can also download `index.html` and open it with no internet connection.
 
 ## How to use
 
@@ -15,6 +15,17 @@ Everything runs in your browser. No data is uploaded anywhere — you can also d
    - **Team summary CSV**: one row per employee
    - **Each employee CSV**: one summary file per person
    - **All reports HTML** or **Print / PDF**: one page per employee
+
+## People & groups
+
+Click **👥 People & groups** under the team summary to:
+
+- **Rename** someone: edit their name.
+- **Merge** duplicates (e.g. `M Torres` and `Mike Torres`): tick both and press **Merge**, or type an existing name into a name box. **Undo** splits them again.
+- **Group** people by crew, role or apprentice/journeyman. Choose a group from the dropdown to get that group's own totals, averages, ranking and exports. **More exports → Summary per group** makes one CSV for each group.
+- **Save setup / Load setup** keeps your renames, merges and groups in a small JSON file, so you can reuse them on another computer. They're also remembered in your browser.
+
+A **Crew / Team / Role** column in your CSV is used as the group automatically.
 
 ## Recognized columns
 
@@ -35,6 +46,7 @@ Column names are matched automatically and can be changed in the dropdowns. File
 | Revenue | Revenue, Invoice, Amount | revenue per hour |
 | Inspection | Inspection (Pass/Fail) | inspection pass rate |
 | Safety | Safety Incidents | safety count |
+| Group | Crew, Team, Role, Position | separate group summaries |
 
 ## Metrics
 

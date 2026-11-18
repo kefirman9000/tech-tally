@@ -15,13 +15,20 @@
 - **Estimates can be wrong.** If one task type is always "inefficient" for everyone, fix the estimate, not the tech.
 - **Use the score to start a conversation.** It should prompt questions, not decide anything on its own.
 
+## Shipped
+
+- Dark mode (default) with light toggle
+- People & groups: rename, merge duplicates, group by crew / role, per-group summaries and rankings, save/load setup
+- Search, group filter, efficiency bars, Prev/Next through reports (← → keys)
+- Minimum records before someone is ranked
+- Collapsible column matching, consolidated export menu
+
 ## Feature ideas for the tool
 
 | Priority | Feature | Why |
 |---|---|---|
 | High | **Date range filter** (this week / month / custom) | Review a specific period without editing CSVs |
 | High | **Trend view**: score and efficiency by week for each person | Shows whether someone is improving, which is more useful than one number |
-| High | **Role / crew grouping** (apprentice, journeyman, foreman) | Fairer comparisons and crew-level totals |
 | Medium | **Adjustable score weights** | Let each shop decide what matters (e.g. callbacks count more) |
 | Medium | **Saved column mappings** (stored in the browser) | Recurring exports from the same software map instantly |
 | Medium | **Single ZIP export** of all individual CSVs | One download instead of many separate files |
