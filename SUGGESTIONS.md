@@ -31,6 +31,8 @@
 - Installable offline app (PWA)
 - One-ZIP export
 - Visible privacy note
+- Accuracy fixes: inspection/callback column mix-up, stricter estimate matching, decimal commas, N/A inspections, overtime on split weeks, per-job completion, cancelled/unknown statuses, month-to-date comparison
+- Score weights now add up to 100; efficiency full marks at 105% of target
 
 ## Feature ideas for the tool
 

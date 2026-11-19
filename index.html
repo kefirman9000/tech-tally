@@ -335,6 +335,7 @@ function parseCSV(text){
     }
   }
   if(f!==""||row.length){row.push(f);rows.push(row);}
+  rows.delim=delim;
   return rows;
 }
 function csvEscape(v){ if(v==null) v=""; v=String(v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
@@ -346,14 +347,14 @@ const FIELDS=[
   {key:"first",label:"First name (if split)",pat:[/^first(\s*name)?$/]},
   {key:"last",label:"Last name (if split)",pat:[/^last(\s*name)?$|surname/]},
   {key:"date",label:"Date",pat:[/^(work\s*)?date$/,/date/,/^day$/]},
-  {key:"hours",label:"Actual hours worked",pat:[/^actual(\s*hours)?$|actual hrs|hours worked|hrs worked|labou?r hours|total hours/,/^hours$|^hrs$/,/time spent|duration/,/hours|hrs/],not:/est|budget|quot|plan|allot|bill|over|^ot/},
+  {key:"hours",label:"Actual hours worked",pat:[/^actual(\s*hours)?$|actual hrs|hours worked|hrs worked|labou?r hours|total hours/,/^hours$|^hrs$/,/time spent|duration/,/hours|hrs/],not:/\best\b|estimat|budget|quot|plan|allot|bill|over|^ot/},
   {key:"start",label:"Start / clock-in time",pat:[/clock\s*in|time\s*in|start(\s*time)?$/]},
   {key:"end",label:"End / clock-out time",pat:[/clock\s*out|time\s*out|end(\s*time)?$|finish(\s*time)?$/]},
-  {key:"est",label:"Estimated / budgeted hours",pat:[/est|budget|quoted|planned|allotted|allowed|target hours|book hours|flat rate/]},
+  {key:"est",label:"Estimated / budgeted hours",pat:[/\best\b|^est(hrs|hours)|estimat|budget|quoted|planned|allotted|allowed|target hours|book hours|flat rate/]},
   {key:"job",label:"Job / work order #",pat:[/work\s*order|^wo\b|wo\s*#|job\s*(#|no|num|id)/,/^job$|ticket|project|site|address|customer/]},
   {key:"task",label:"Task / work type",pat:[/task|work\s*type|job\s*type|category|service|description|activity/]},
   {key:"status",label:"Status / completed",pat:[/status|complete|finished|done/]},
-  {key:"callback",label:"Callback / rework",pat:[/call\s*-?back|rework|re-?do|return\s*visit|warranty|fail/]},
+  {key:"callback",label:"Callback / rework",pat:[/call\s*-?back|rework|re-?do|return\s*visit|warranty/],not:/inspect/},
   {key:"billable",label:"Billable hours (or Y/N)",pat:[/billable|bill\s*hrs|billed/]},
   {key:"ot",label:"Overtime hours",pat:[/over\s*time|^ot(\s*hrs|\s*hours)?$/]},
   {key:"revenue",label:"Revenue / invoice $",pat:[/revenue|invoice|amount|sales|billed\s*\$|total\s*\$|price/]},
@@ -406,7 +407,8 @@ function loadText(name,text){
     const o={__line:i+1}; headers.forEach((k,j)=>o[k]=(r[j]??"").trim()); data.push(o);
   }
   files=files.filter(f=>f.name!==name);
-  files.push({name,headers,rows:data});
+  // Semicolon-separated files come from locales that write 7,5 for 7.5
+  files.push({name,headers,rows:data,decComma:rows.delim===";"});
 }
 $("#clearBtn").onclick=()=>{files=[];mapping={};userNone.clear();refresh();};
 
@@ -463,8 +465,10 @@ function refresh(){
 
 /* ================= Value helpers ================= */
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+let DEC_COMMA=false; // set per file while rows are read (see buildRows)
 function num(v){
   if(v==null) return NaN; v=String(v).trim(); if(!v) return NaN;
+  if(DEC_COMMA&&v.includes(",")) v=v.replace(/\./g,"").replace(",",".");
   let m=v.match(/^(\d+):(\d{1,2})(?::\d{1,2})?$/); if(m && !/am|pm/i.test(v)) return +m[1]+ +m[2]/60;
   m=v.match(/^(\d+(?:\.\d+)?)\s*h(?:rs?|ours?)?\s*(?:(\d+)\s*m(?:in)?s?)?$/i); if(m) return +m[1]+(m[2]?+m[2]/60:0);
   if(!/^[-($]*\s*\$?\s*[\d.,]+\s*\)?$/.test(v)) return NaN;
@@ -499,12 +503,29 @@ function truthy(v){
   const n=num(v); if(!isNaN(n)) return n>0;
   return /call\s*back|rework|redo|return|fail/.test(v);
 }
+// true = passed, false = failed, null = not inspected / unknown (left out of the pass rate)
+function inspResult(v){
+  v=String(v||"").trim().toLowerCase(); if(!v) return null;
+  if(/fail|reject|not\s*(pass|approv|ok)|correction|red\s*tag|^no?$|^f$/.test(v)) return false;
+  if(/pass|approv|^ok$|^y(es)?$|^p$|good|green\s*tag/.test(v)) return true;
+  return null;
+}
 function countVal(v){const n=num(v); if(!isNaN(n)) return Math.max(0,n); return truthy(v)?1:0;}
+// true = done, false = still open, null = not the tech's to finish (cancelled etc.), undefined = unrecognised
 function isComplete(v){
   v=String(v||"").trim().toLowerCase(); if(!v) return null;
-  if(/incomplete|not\s*(complete|done|finished)|open|pending|in\s*progress|on\s*hold|wip|scheduled|cancel/.test(v)) return false;
-  if(/complete|done|closed|finished|^y(es)?$|^true$|^1$|invoiced|paid|passed/.test(v)) return true;
-  return false;
+  if(/cancel|void|no[\s-]*show|duplicate|declined/.test(v)) return null;
+  if(/incomplete|not\s*(complete|done|finished)|open|pending|in\s*progress|on\s*hold|wip|scheduled|dispatched|assigned|en\s*route|re-?opened|^no?$|^false$|^0$/.test(v)) return false;
+  if(/complete|done|closed|finished|resolved|^y(es)?$|^true$|^1$|invoiced|paid|passed/.test(v)) return true;
+  return undefined;
+}
+// Overtime per day: within each Mon–Sun week, hours past the weekly standard are counted on the days they were worked.
+function dayOvertime(rows,std){
+  const days={}; rows.forEach(r=>{if(r.d){const k=dkey(r.d);days[k]=(days[k]||0)+r.hrs;}});
+  const out={}, cum={};
+  Object.keys(days).sort().forEach(k=>{const w=weekKey(fromKey(k)), before=cum[w]||0, after=before+days[k];
+    out[k]=Math.max(0,after-std)-Math.max(0,before-std); cum[w]=after;});
+  return out;
 }
 function normName(s){
   s=String(s||"").replace(/\s+/g," ").trim(); if(!s) return "";
@@ -520,9 +541,9 @@ const target=()=>(+$("#setTarget").value||100)/100;
 function buildRows(){
   const fms=files.map(fileMap);
   const M={}; FIELDS.forEach(fd=>M[fd.key]=fms.some(m=>m[fd.key])?(mapping[fd.key]||"(auto)"):""); window.EFFMAP=M;
-  const issues=[]; const seen=new Map(); let used=0,total=0,dups=0,noName=0,badHrs=0,badDate=0,odd=0,noDate=0;
+  const issues=[]; const seen=new Map(); const unkStatus=new Map(); let used=0,total=0,dups=0,noName=0,badHrs=0,badDate=0,odd=0,noDate=0,badStatus=0;
   const emps=new Map(); const dedupe=$("#setDedupe").checked;
-  files.forEach((f,fi)=>{ const FM=fms[fi];
+  files.forEach((f,fi)=>{ const FM=fms[fi]; DEC_COMMA=!!f.decComma;
     for(const r of f.rows){
       total++;
       let name=FM.employee?r[FM.employee]:"";
@@ -552,20 +573,24 @@ function buildRows(){
       if(!emps.has(nameD)) emps.set(nameD,{name:nameD,rows:[],files:new Set(),raws:new Set(),gc:{}});
       const e=emps.get(nameD); e.files.add(f.name); e.raws.add(raw);
       if(FM.group){const gv=String(r[FM.group]||"").trim(); if(gv) e.gc[gv]=(e.gc[gv]||0)+1;}
+      let done=null;
+      if(FM.status){ done=isComplete(r[FM.status]); if(done===undefined){ done=null; badStatus++; const v=String(r[FM.status]).trim(), k=f.name+"|"+v.toLowerCase(); if(unkStatus.has(k)) unkStatus.get(k).n++; else unkStatus.set(k,{...base,v,n:1}); } }
       let bill=NaN; if(FM.billable){const bv=num(r[FM.billable]); bill=!isNaN(bv)?bv:(truthy(r[FM.billable])?(isNaN(hrs)?0:hrs):0);}
       e.rows.push({
         hrs:isNaN(hrs)?0:hrs, hasHrs:!isNaN(hrs), d, est, job, task, file:f.name,
-        done:FM.status?isComplete(r[FM.status]):null,
+        done,
         cb:FM.callback?countVal(r[FM.callback]):0,
         bill, ot:FM.ot?num(r[FM.ot]):NaN,
         rev:FM.revenue?num(r[FM.revenue]):NaN,
-        insp:FM.inspection?String(r[FM.inspection]||"").trim().toLowerCase():"",
+        insp:FM.inspection?inspResult(r[FM.inspection]):null,
         safety:FM.safety?countVal(r[FM.safety]):0,
       });
       used++;
     }
   });
-  ISSUES={list:issues,total,used,dups,noName,badHrs,badDate,odd,noDate,dedupe};
+  DEC_COMMA=false;
+  unkStatus.forEach(x=>issues.push({file:x.file,line:x.line,emp:x.emp,date:x.date,hours:x.hours,issue:`Status "${x.v}" not recognised${x.n>1?` (${x.n} rows)`:""}, so not counted in completion rate`}));
+  ISSUES={list:issues,total,used,dups,noName,badHrs,badDate,odd,noDate,badStatus,dedupe};
   return emps;
 }
 function renderDataCheck(){
@@ -575,6 +600,7 @@ function renderDataCheck(){
   if(I.badHrs) parts.push(`${I.badHrs} with unreadable or missing hours`);
   if(I.odd) parts.push(`${I.odd} with unusual hours`);
   if(I.badDate) parts.push(`${I.badDate} with unreadable dates`);
+  if(I.badStatus) parts.push(`${I.badStatus} with unrecognised status`);
   $("#checkSummary").innerHTML=parts.length
     ?`<span class="check-warn">⚠ ${I.used} of ${I.total} rows used</span> <span class="hint">· ${parts.join(" · ")}</span>`
     :`<span class="check-ok">✓ All ${I.total} rows used</span> <span class="hint">· no problems found</span>`;
@@ -597,14 +623,19 @@ function computePeriod(emps){
     return {all:true,compare:false}; }
   $("#compareChk").disabled=false; $("#compareChk").parentElement.title="";
   let from,to,pf,pt;
-  if(sel==="month"){ from=new Date(max.getFullYear(),max.getMonth(),1); to=new Date(max.getFullYear(),max.getMonth()+1,0); pf=new Date(from.getFullYear(),from.getMonth()-1,1); pt=addDays(from,-1); }
+  let mtd=false;
+  if(sel==="month"){
+    from=new Date(max.getFullYear(),max.getMonth(),1); to=new Date(max.getFullYear(),max.getMonth()+1,0); pf=new Date(from.getFullYear(),from.getMonth()-1,1); pt=addDays(from,-1);
+    // data stops mid-month: compare the same days of the previous month, not the whole month
+    if(max<to){ mtd=true; to=max; pt=new Date(pf.getFullYear(),pf.getMonth(),Math.min(max.getDate(),pt.getDate())); }
+  }
   else if(sel==="custom"){
     if(!$("#dFrom").value){$("#dFrom").value=dkey(addDays(max,-27));$("#dTo").value=dkey(max);}
     from=fromKey($("#dFrom").value); to=$("#dTo").value?fromKey($("#dTo").value):max; if(to<from)[from,to]=[to,from];
     const len=Math.round((to-from)/DAY)+1; pt=addDays(from,-1); pf=addDays(from,-len);
   } else { const n=+sel; to=max; from=addDays(max,-(n-1)); pt=addDays(from,-1); pf=addDays(from,-n); }
   const lbl=d=>d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:from.getFullYear()!==to.getFullYear()?"numeric":undefined});
-  $("#periodLabel").textContent=`${lbl(from)} – ${lbl(to)}`+(cmp?`  vs  ${lbl(pf)} – ${lbl(pt)}`:"")+(ISSUES.noDate?` · ${ISSUES.noDate} rows without dates only appear under All dates`:"");
+  $("#periodLabel").textContent=`${lbl(from)} – ${lbl(to)}`+(mtd?" (month to date)":"")+(cmp?`  vs  ${lbl(pf)} – ${lbl(pt)}`:"")+(ISSUES.noDate?` · ${ISSUES.noDate} rows without dates only appear under All dates`:"");
   return {all:false,from,to,pf,pt,compare:cmp};
 }
 $("#periodSel").addEventListener("change",()=>compute());
@@ -612,6 +643,7 @@ $("#compareChk").addEventListener("change",()=>compute());
 ["#dFrom","#dTo"].forEach(id=>$(id).addEventListener("change",()=>compute()));
 
 /* ================= Stats ================= */
+const EFF_CAP=1.05; // efficiency gets full marks at 105% of target, so working to estimate isn't penalised
 function statsFor(e,R){
   const M=window.EFFMAP, weekStd=+$("#setWeek").value||40, dayStd=+$("#setDay").value||8, T=target();
   const s={name:e.name,entries:R.length,files:[...new Set(R.map(r=>r.file))],raws:[...e.raws]};
@@ -629,8 +661,9 @@ function statsFor(e,R){
   s.eff=er.length&&s.actH?s.estH/s.actH:null;
   s.onBudget=er.length?er.filter(r=>r.hrs<=r.est*1.0001).length/er.length:null;
   s.effRows=er.length; s.hoursVar=er.length?s.actH-s.estH:null;
-  const st=R.filter(r=>r.done!==null);
-  s.completed=st.length?st.filter(r=>r.done).length:null; s.compRate=st.length?s.completed/st.length:null;
+  // completion is per job: a multi-day job counts once, and is complete if any of its rows says so
+  const units=new Map(); R.forEach((r,i)=>{if(r.done===null) return; const k=r.job?"j:"+r.job.toLowerCase():"r:"+i; units.set(k,units.get(k)||r.done);});
+  s.completed=units.size?[...units.values()].filter(Boolean).length:null; s.compRate=units.size?s.completed/units.size:null;
   s.callbacks=M.callback?R.reduce((a,r)=>a+r.cb,0):null;
   s.cbDenom=s.jobs||s.completed||s.entries;
   s.cbRate=M.callback&&s.cbDenom?s.callbacks/s.cbDenom:null;
@@ -639,22 +672,27 @@ function statsFor(e,R){
   const wk={};R.forEach(r=>{if(r.d){const k=weekKey(r.d);wk[k]=(wk[k]||0)+r.hrs;}});
   s.weekly=Object.entries(wk).sort((a,b)=>a[0]<b[0]?-1:1);
   if(M.ot){s.ot=R.reduce((a,r)=>a+(isNaN(r.ot)?0:r.ot),0);}
-  else if(s.weekly.length){s.ot=s.weekly.reduce((a,[,h])=>a+Math.max(0,h-weekStd),0);}
+  else if(s.weekly.length){
+    // worked out on full weeks from all of this person's rows, so a period that splits a week still shows the right overtime
+    if(!e._ot||e._ot.std!==weekStd) e._ot={std:weekStd,map:dayOvertime(e.rows,weekStd)};
+    const ds=new Set(R.filter(r=>r.d).map(r=>dkey(r.d))); s.ot=[...ds].reduce((a,k)=>a+(e._ot.map[k]||0),0);
+  }
   else s.ot=null;
   s.rev=M.revenue?R.reduce((a,r)=>a+(isNaN(r.rev)?0:r.rev),0):null;
   s.revPerHr=s.rev!=null&&s.hours?s.rev/s.hours:null;
-  if(M.inspection){const ins=R.filter(r=>r.insp);s.inspN=ins.length;s.inspPass=ins.length?ins.filter(r=>/pass|ok|approved|^y|good/.test(r.insp)&&!/fail/.test(r.insp)).length/ins.length:null;} else s.inspPass=null;
+  if(M.inspection){const ins=R.filter(r=>r.insp!=null);s.inspN=ins.length;s.inspPass=ins.length?ins.filter(r=>r.insp).length/ins.length:null;} else s.inspPass=null;
   s.safety=M.safety?R.reduce((a,r)=>a+r.safety,0):null;
   const tb={};R.forEach(r=>{const k=r.task||"(unspecified)";tb[k]=tb[k]||{n:0,h:0,est:0,act:0};tb[k].n++;tb[k].h+=r.hrs;if(!isNaN(r.est)&&r.est>0&&r.hrs>0){tb[k].est+=r.est;tb[k].act+=r.hrs;}});
   s.tasks=Object.entries(tb).sort((a,b)=>b[1].h-a[1].h);
   const dl={};R.forEach(r=>{if(r.d){const k=dkey(r.d);dl[k]=(dl[k]||0)+r.hrs;}}); s.longDays=Object.values(dl).filter(h=>h>dayStd).length;
   // score with breakdown
   const parts=[];
-  if(s.eff!=null) parts.push({label:"Efficiency",val:Math.min(s.eff/T,1.2)/1.2*100,w:.4,detail:`${pct(s.eff)} vs target ${pct(T)} (full marks at ${pct(T*1.2)})`});
-  if(s.compRate!=null) parts.push({label:"Completion",val:s.compRate*100,w:.25,detail:`${pct(s.compRate)} of jobs completed`});
+  // weights add up to 100; missing metrics are dropped and the rest re-balanced
+  if(s.eff!=null) parts.push({label:"Efficiency",val:Math.min(s.eff/T,EFF_CAP)/EFF_CAP*100,w:.35,detail:`${pct(s.eff)} vs target ${pct(T)} (full marks at ${pct(T*EFF_CAP)})`});
+  if(s.compRate!=null) parts.push({label:"Completion",val:s.compRate*100,w:.2,detail:`${pct(s.compRate)} of jobs completed`});
   if(s.cbRate!=null) parts.push({label:"Callbacks",val:Math.max(0,1-s.cbRate*5)*100,w:.2,detail:`${s.callbacks} callback${s.callbacks===1?"":"s"} (${pct(s.cbRate,1)}); 0 at 20%+`});
   if(s.inspPass!=null) parts.push({label:"Inspections",val:s.inspPass*100,w:.15,detail:`${pct(s.inspPass)} passed`});
-  if(s.util!=null) parts.push({label:"Billable",val:Math.min(s.util/0.85,1)*100,w:.15,detail:`${pct(s.util)} billable (full marks at 85%)`});
+  if(s.util!=null) parts.push({label:"Billable",val:Math.min(s.util/0.85,1)*100,w:.1,detail:`${pct(s.util)} billable (full marks at 85%)`});
   const W=parts.reduce((a,p)=>a+p.w,0);
   parts.forEach(p=>{p.max=p.w/W*100;p.pts=p.val*p.w/W;});
   s.scoreParts=parts; s.score=W?parts.reduce((a,p)=>a+p.pts,0):null;
