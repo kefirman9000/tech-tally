@@ -3,68 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0e12">
+<meta name="description" content="Offline electrician performance & efficiency summaries from timesheet CSVs.">
 <title>Tech Tally – Electrician Performance Summary</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tech Tally">
 <style>
   :root{
     --bg:#121419; --panel:#1a1d24; --panel2:#20242c; --ink:#e9eaee; --muted:#9097a3; --line:#2c313b;
     --accent:#f2b01e; --accent-ink:#2a1e00; --good:#3fbf74; --warn:#f0a63a; --bad:#ef6b5b;
-    --dark:#0c0e12; --hover:#232833; --chip:#262b35; --field:#151820;
+    --dark:#0c0e12; --hover:#232833; --chip:#262b35; --field:#151820; --grid:#2a2f39;
     --g-bg:rgba(63,191,116,.15); --w-bg:rgba(240,166,58,.16); --b-bg:rgba(239,107,91,.16); --n-bg:rgba(255,255,255,.07);
     --overlay:rgba(0,0,0,.6); color-scheme:dark;
   }
   :root[data-theme=light]{
     --bg:#f5f4f0; --panel:#ffffff; --panel2:#fbfaf7; --ink:#1c1d1f; --muted:#6b6d72; --line:#e2e0da;
-    --accent:#e8a400; --accent-ink:#4a3500; --good:#1f8a4c; --warn:#c77700; --bad:#c0392b;
-    --dark:#22252b; --hover:#fbf8ef; --chip:#efede7; --field:#ffffff;
+    --accent:#d99a00; --accent-ink:#3a2a00; --good:#1f8a4c; --warn:#b86e00; --bad:#c0392b;
+    --dark:#22252b; --hover:#fbf8ef; --chip:#efede7; --field:#ffffff; --grid:#ebe9e3;
     --g-bg:#e3f4ea; --w-bg:#fdf0dc; --b-bg:#fbe5e2; --n-bg:#eeeeee;
     --overlay:rgba(20,20,25,.45); color-scheme:light;
   }
   *{box-sizing:border-box}
   body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-  header{background:var(--dark);color:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;padding:18px 28px;display:flex;align-items:center;gap:14px}
-  header .bolt{width:34px;height:34px;background:var(--accent);border-radius:8px;display:grid;place-items:center}
+  header{background:var(--dark);color:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;padding:14px 28px;display:flex;align-items:center;gap:14px}
+  header .bolt{width:34px;height:34px;background:#f2b01e;border-radius:8px;display:grid;place-items:center;flex:none}
   header h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.2px}
   header p{margin:0;color:#b9bcc3;font-size:12.5px}
-  main{max-width:1280px;margin:0 auto;padding:22px 28px 60px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:18px}
+  header .grow{flex:1}
+  .icon-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:7px 11px;cursor:pointer;font:inherit;font-size:13px;white-space:nowrap}
+  .icon-btn:hover{background:rgba(255,255,255,.16)}
+  main{max-width:1280px;margin:0 auto;padding:20px 28px 40px}
+  footer{max-width:1280px;margin:0 auto;padding:0 28px 40px;color:var(--muted);font-size:12.5px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
   h2{font-size:15px;margin:0 0 12px;font-weight:650}
+  .steps{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+  .step{font-size:12.5px;color:var(--muted);padding:5px 12px;border-radius:999px;border:1px solid var(--line)}
+  .step.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent);font-weight:600}
+  .step.done{color:var(--good);border-color:var(--good)}
+  /* drop zone */
   .drop{border:2px dashed var(--line);border-radius:12px;padding:34px 20px;text-align:center;background:var(--panel2);cursor:pointer;transition:.15s}
   .drop.over{border-color:var(--accent);background:rgba(242,176,30,.08)}
   .drop strong{font-size:16px;display:block;margin-bottom:4px}
   .drop span{color:var(--muted)}
-  .files{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .drop .priv{display:block;margin-top:10px;font-size:12.5px;color:var(--good)}
+  .drop.compact{padding:10px 14px;text-align:left;display:flex;align-items:center;gap:10px}
+  .drop.compact strong{font-size:14px;margin:0}
+  .drop.compact .full{display:none}
+  .drop:not(.compact) .short{display:none}
+  .files{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
   .chip{background:var(--chip);border-radius:999px;padding:4px 10px 4px 12px;font-size:12.5px;display:flex;gap:6px;align-items:center}
   .chip button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:14px;padding:0 2px}
+  /* forms */
   .grid-map{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px 16px}
   .grid-map label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
   .grid-map label b{color:var(--ink);font-weight:600}
-  select,input[type=number],input[type=search]{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:7px;background:var(--field);color:var(--ink);font:inherit}
-  select:focus,input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  select,input[type=number],input[type=search],input[type=date],textarea{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:7px;background:var(--field);color:var(--ink);font:inherit}
+  textarea{min-height:80px;resize:vertical}
+  select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .btn{border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;font-weight:550}
+  .btn{border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;font-weight:550;white-space:nowrap}
   .btn:hover{border-color:var(--muted)}
   .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
   .btn.primary:hover{filter:brightness(.96)}
+  .btn.sm{padding:4px 10px;font-size:12.5px}
   .btn:disabled{opacity:.45;cursor:not-allowed}
   .hint{color:var(--muted);font-size:12.5px}
-  .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px}
-  .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-  .kpi .v{font-size:20px;font-weight:700}
-  .kpi .l{font-size:12px;color:var(--muted)}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  .hidden{display:none!important}
+  details.fold>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  details.fold>summary::-webkit-details-marker{display:none}
+  details.fold>summary .tog{color:var(--accent);font-size:13px;font-weight:600;white-space:nowrap}
+  details.fold[open]>summary .tog::after{content:" ▴"} details.fold:not([open])>summary .tog::after{content:" ▾"}
+  .matched{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .tag{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--g-bg);color:var(--good)}
+  .tag.off{background:var(--n-bg);color:var(--muted)}
+  /* data check */
+  .check-ok{color:var(--good);font-weight:600}
+  .check-warn{color:var(--warn);font-weight:600}
+  .issue-list{margin-top:12px;max-height:320px}
+  .issue-list td{white-space:normal}
+  /* suggestions */
+  .suggest{border:1px solid var(--accent);background:rgba(242,176,30,.07);border-radius:10px;padding:10px 14px;margin-bottom:12px}
+  .suggest .s-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:5px 0}
+  .suggest .s-row+.s-row{border-top:1px solid var(--line)}
+  .suggest b{font-weight:650}
+  /* period bar */
+  .period{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding:10px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+  .period select{width:auto}
+  .period input[type=date]{width:auto;padding:5px 6px}
+  .period label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px}
+  /* KPIs */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+  .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .kpi .v{font-size:30px;font-weight:750;line-height:1.15;margin:4px 0 2px}
+  .kpi .s{font-size:12.5px;color:var(--muted)}
+  /* toolbar & views */
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .toolbar input[type=search]{max-width:240px}
+  .toolbar select{width:auto;max-width:240px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{background:var(--panel2);color:var(--muted);border:0;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+  .menu{position:relative}
+  .menu-list{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:270px;box-shadow:0 12px 30px rgba(0,0,0,.35);z-index:15}
+  .menu-list button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--ink);padding:9px 10px;border-radius:7px;cursor:pointer;font:inherit}
+  .menu-list button:hover{background:var(--hover)}
+  .menu-list small{display:block;color:var(--muted);font-size:11.5px}
+  /* table */
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;vertical-align:middle}
   th:first-child,td:first-child{text-align:left}
-  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);cursor:pointer;user-select:none;position:sticky;top:0;background:var(--panel);z-index:1}
+  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);cursor:pointer;user-select:none;position:sticky;top:0;background:var(--panel);z-index:2}
   th.sorted::after{content:" ▾"} th.sorted.asc::after{content:" ▴"}
-  tbody tr:hover{background:var(--hover)}
-  .table-wrap{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:10px}
-  .name-link{color:var(--ink);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+  #teamTable th:first-child,#teamTable td:first-child{position:sticky;left:0;background:var(--panel);z-index:1;box-shadow:1px 0 0 var(--line)}
+  #teamTable th:first-child{z-index:3}
+  #teamTable tbody tr:hover td{background:var(--hover)}
+  .table-wrap{overflow:auto;max-height:600px;border:1px solid var(--line);border-radius:10px}
+  .name-link{color:var(--ink);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;background:none;border:0;padding:0;font:inherit}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
   .g{background:var(--g-bg);color:var(--good)} .w{background:var(--w-bg);color:var(--warn)} .b{background:var(--b-bg);color:var(--bad)} .n{background:var(--n-bg);color:var(--muted)}
-  .hidden{display:none!important}
+  [data-score]{cursor:help}
   .bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;min-width:60px}
   .bar i{display:block;height:100%;background:var(--accent)}
-  /* Individual report */
+  .bar i.gb{background:var(--good)} .bar i.wb{background:var(--warn)} .bar i.bb{background:var(--bad)}
+  .effcell{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+  .effcell .bar{width:60px}
+  .dl{display:block;font-size:11px;font-weight:600;margin-top:1px}
+  .dl.up{color:var(--good)} .dl.dn{color:var(--bad)} .dl.eq,.dl.new{color:var(--muted)}
+  .empty{text-align:center;color:var(--muted);padding:26px}
+  /* mobile cards */
+  .cards{display:none}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .card .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+  .card .grp{font-size:12px;color:var(--muted)}
+  .card .mgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .card .m .ml{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  .card .m .mv{font-weight:650}
+  /* tooltip */
+  #tip{position:fixed;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 12px 30px rgba(0,0,0,.4);font-size:12.5px;max-width:320px;pointer-events:none}
+  #tip table{font-size:12.5px} #tip td{padding:3px 6px;border:0}
+  #tip .tot td{border-top:1px solid var(--line);font-weight:700}
+  /* report */
   .report{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px 30px;margin-bottom:18px}
   .report h3{margin:0;font-size:20px}
   .report .sub{color:var(--muted);margin:2px 0 16px}
@@ -74,50 +157,51 @@
   .report h4{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:16px 0 8px}
   .report table td,.report table th{padding:6px 8px}
   .report th{position:static;cursor:default}
+  .report .breakdown td:nth-child(2){color:var(--muted);text-align:left;white-space:normal}
+  .report .notebox{white-space:pre-wrap;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .chart svg{width:100%;height:auto;display:block}
+  .chart .ax{fill:var(--muted);font-size:10.5px}
+  .chart .lbl{fill:var(--ink);font-size:11px}
+  .chart .gridl{stroke:var(--grid);stroke-width:1}
+  .chart .ref{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 3}
+  .chart .barm{fill:var(--accent)}
+  .chart .barm:hover{opacity:.8}
+  .chart .barm.part{opacity:.4}
+  .chart .teamm{fill:var(--ink)}
+  .legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:4px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
   .notes li{margin-bottom:4px}
-  .modal-bg{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;overflow:auto;z-index:20}
-  .modal{max-width:920px;width:100%}
-  .modal-bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
-  #printArea{display:none}
-  header .grow{flex:1}
-  .icon-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:7px 11px;cursor:pointer;font:inherit;font-size:13px}
-  .icon-btn:hover{background:rgba(255,255,255,.16)}
-  .steps{display:flex;gap:6px;margin:0 0 16px;flex-wrap:wrap}
-  .step{font-size:12.5px;color:var(--muted);padding:5px 12px;border-radius:999px;border:1px solid var(--line)}
-  .step.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent);font-weight:600}
-  .step.done{color:var(--good);border-color:var(--good)}
-  details.map>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
-  details.map>summary::-webkit-details-marker{display:none}
-  details.map>summary .tog{color:var(--accent);font-size:13px;font-weight:600}
-  details.map[open]>summary .tog::after{content:" ▴"} details.map:not([open])>summary .tog::after{content:" ▾"}
-  .matched{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .tag{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--g-bg);color:var(--good)}
-  .tag.off{background:var(--n-bg);color:var(--muted)}
-  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-  .toolbar input[type=search]{max-width:260px}
-  .menu{position:relative}
-  .menu-list{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:250px;box-shadow:0 12px 30px rgba(0,0,0,.35);z-index:15}
-  .menu-list button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--ink);padding:9px 10px;border-radius:7px;cursor:pointer;font:inherit}
-  .menu-list button:hover{background:var(--hover)}
-  .menu-list small{display:block;color:var(--muted);font-size:11.5px}
-  .effcell{display:flex;align-items:center;gap:8px;justify-content:flex-end}
-  .effcell .bar{width:60px}
-  .bar i.gb{background:var(--good)} .bar i.wb{background:var(--warn)} .bar i.bb{background:var(--bad)}
-  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--ink);border:1px solid var(--line);padding:10px 16px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:50;font-size:13.5px;transition:opacity .3s}
-  .empty{text-align:center;color:var(--muted);padding:26px}
+  .modal-bg{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-start;justify-content:center;padding:24px 14px;overflow:auto;z-index:30}
+  .modal{max-width:960px;width:100%}
+  .modal-bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap}
   .modal-bar .nav{margin-right:auto;display:flex;gap:8px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--panel2);color:var(--ink);border:1px solid var(--line);padding:10px 16px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:70;font-size:13.5px;transition:opacity .3s;max-width:90vw}
   .kbd{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--muted)}
+  #printArea{display:none}
+  @media (max-width:900px){.kpis{grid-template-columns:1fr 1fr}}
+  @media (max-width:700px){
+    header{padding:10px 14px} header p{display:none}
+    main{padding:14px 12px 30px} footer{padding:0 14px 30px}
+    .panel{padding:14px}
+    .table-wrap{display:none}
+    .cards{display:block}
+    .kpi .v{font-size:24px}
+    .report{padding:16px}
+    .report .two{grid-template-columns:1fr}
+    .toolbar input[type=search],.toolbar select{max-width:none;flex:1 1 140px}
+    .seg{width:100%;overflow-x:auto} .seg button{flex:1}
+    .steps{display:none}
+  }
   @media print{
-    :root,:root[data-theme=light]{--bg:#fff;--panel:#fff;--panel2:#fff;--ink:#1c1d1f;--muted:#6b6d72;--line:#e2e0da;--good:#1f8a4c;--warn:#c77700;--bad:#c0392b;--g-bg:#e3f4ea;--w-bg:#fdf0dc;--b-bg:#fbe5e2;--n-bg:#eee;color-scheme:light}
+    :root,:root[data-theme=light]{--bg:#fff;--panel:#fff;--panel2:#fafafa;--ink:#1c1d1f;--muted:#6b6d72;--line:#e2e0da;--good:#1f8a4c;--warn:#b86e00;--bad:#c0392b;--g-bg:#e3f4ea;--w-bg:#fdf0dc;--b-bg:#fbe5e2;--n-bg:#eee;--accent:#d99a00;--grid:#ebe9e3;color-scheme:light}
     body{background:#fff}
     body > *:not(#printArea){display:none!important}
     #printArea{display:block!important}
     .report{border:0;border-radius:0;padding:0;margin:0;page-break-after:always;break-after:page}
     .report:last-child{page-break-after:auto;break-after:auto}
-    .pill{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .report .head{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .pill,.report .head,.chart,.legend i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .report .two{grid-template-columns:1fr 1fr}
   }
-  @media (max-width:760px){.report .two{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -125,20 +209,24 @@
   <div class="bolt"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="#3a2a00"/></svg></div>
   <div>
     <h1>Tech Tally</h1>
-    <p>Timesheet / work-order CSVs → performance &amp; efficiency summary for every employee. Runs offline — nothing is uploaded.</p>
+    <p>Timesheet / work-order CSVs → performance &amp; efficiency summary for every employee.</p>
   </div>
   <div class="grow"></div>
+  <button class="icon-btn hidden" id="installBtn" title="Install as an app">⤓ Install app</button>
   <button class="icon-btn" id="themeBtn" title="Toggle light / dark">☀ Light</button>
 </header>
 
 <main>
-  <div class="steps"><span class="step on" id="st1">1 · Add files</span><span class="step" id="st2">2 · Check columns</span><span class="step" id="st3">3 · Review &amp; export</span></div>
-  <section class="panel">
-    <h2>1. Add CSV files</h2>
+  <div class="steps"><span class="step on" id="st1">1 · Add files</span><span class="step" id="st2">2 · Check data</span><span class="step" id="st3">3 · Review &amp; export</span></div>
+
+  <section class="panel" id="filePanel">
+    <h2 id="fileHead">1. Add CSV files</h2>
     <div id="drop" class="drop">
-      <strong>Drag &amp; drop CSV files here</strong>
-      <span>or click to choose — you can add several files at once (e.g. one per week or per crew)</span>
-      <input id="fileInput" type="file" accept=".csv,text/csv,.txt" multiple hidden>
+      <strong class="full">Drag &amp; drop CSV files here</strong>
+      <span class="full">or click to choose. You can add several files at once (e.g. one per week or per crew).</span>
+      <span class="priv full">🔒 Your files never leave this device. Everything is processed in your browser.</span>
+      <strong class="short">＋ Add more files</strong><span class="short">drop here or click · 🔒 stays on this device</span>
+      <input id="fileInput" type="file" accept=".csv,text/csv,.txt,.tsv" multiple hidden>
     </div>
     <div id="fileList" class="files"></div>
     <div class="row" style="margin-top:12px">
@@ -149,78 +237,107 @@
   </section>
 
   <section class="panel hidden" id="mapPanel">
-   <details class="map" id="mapDetails">
-    <summary><h2 style="margin:0">2. Columns &amp; settings <span class="hint" id="mapSummary" style="font-weight:400"></span></h2><span class="tog">Edit</span></summary>
+   <details class="fold" id="mapDetails">
+    <summary><h2 style="margin:0">Columns &amp; settings <span class="hint" id="mapSummary" style="font-weight:400"></span></h2><span class="tog">Edit</span></summary>
     <div class="matched" id="mapTags"></div>
-    <p class="hint" style="margin-top:14px">Columns were matched automatically. Fix any that are wrong — only <b>Employee name</b> is required. Everything else adds more metrics.</p>
+    <p class="hint" style="margin-top:14px">Columns were matched automatically. Fix any that are wrong. Only <b>Employee name</b> is required; everything else adds more metrics.</p>
     <div class="grid-map" id="mapGrid"></div>
     <h2 style="margin-top:18px">Settings</h2>
     <div class="grid-map">
       <div><label><b>Standard hours / week</b> (overtime above this)</label><input type="number" id="setWeek" value="40" min="0" step="0.5"></div>
-      <div><label><b>Standard hours / day</b> (used if no weekly dates)</label><input type="number" id="setDay" value="8" min="0" step="0.5"></div>
+      <div><label><b>Standard hours / day</b></label><input type="number" id="setDay" value="8" min="0" step="0.5"></div>
       <div><label><b>Efficiency target %</b> (estimated ÷ actual hours)</label><input type="number" id="setTarget" value="100" min="1" step="1"></div>
-      <div><label><b>Minimum records to rank</b> (hide tiny samples from ranking)</label><input type="number" id="setMin" value="5" min="1" step="1"></div>
+      <div><label><b>Minimum records to rank</b></label><input type="number" id="setMin" value="5" min="1" step="1"></div>
     </div>
+   </details>
+  </section>
+
+  <section class="panel hidden" id="checkPanel">
+   <details class="fold" id="checkDetails">
+    <summary><h2 style="margin:0">Data check <span id="checkSummary" style="font-weight:400;font-size:13px"></span></h2><span class="tog">View</span></summary>
+    <div class="row" style="margin-top:12px">
+      <label class="row" style="gap:6px;cursor:pointer"><input type="checkbox" id="setDedupe" checked> Remove duplicate rows (same person, date, job, task and hours)</label>
+      <span style="flex:1"></span>
+      <button class="btn sm" id="issuesCsv">Download issues CSV</button>
+    </div>
+    <div class="table-wrap issue-list"><table id="issueTable"><thead><tr><th>File</th><th style="text-align:right">Row</th><th style="text-align:left">Issue</th><th style="text-align:left">Employee</th><th style="text-align:left">Date</th><th style="text-align:left">Hours</th></tr></thead><tbody></tbody></table></div>
    </details>
   </section>
 
   <section class="panel hidden" id="resultPanel">
     <div class="row" style="justify-content:space-between;margin-bottom:12px">
-      <h2 style="margin:0">3. Team summary</h2>
+      <h2 style="margin:0">Team summary</h2>
       <div class="row">
         <button class="btn primary" id="exportTeam">⬇ Team summary CSV</button>
         <div class="menu">
           <button class="btn" id="moreBtn">More exports ▾</button>
           <div class="menu-list hidden" id="moreMenu">
-            <button id="exportGroups">Summary per group<small>One team-summary CSV for each group</small></button>
-            <button id="exportEach">Each employee as CSV<small>One file per person (current view)</small></button>
+            <button id="exportZip">Everything (ZIP)<small>Team + group summaries, every employee CSV, all reports</small></button>
+            <button id="exportGroups">Summary per group (ZIP)<small>One team-summary CSV for each group</small></button>
+            <button id="exportEach">Each employee as CSV (ZIP)<small>One file per person in the current view</small></button>
             <button id="exportHtml">All reports as HTML<small>One shareable file, one section per person</small></button>
             <button id="printAll">Print / save as PDF<small>One page per employee</small></button>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="period" id="periodBar">
+      <b style="font-size:13px">Period</b>
+      <select id="periodSel">
+        <option value="all">All dates</option>
+        <option value="7">Last 7 days</option>
+        <option value="14">Last 2 weeks</option>
+        <option value="28">Last 4 weeks</option>
+        <option value="month">Latest month</option>
+        <option value="custom">Custom…</option>
+      </select>
+      <span id="customDates" class="row hidden" style="gap:6px"><input type="date" id="dFrom"> to <input type="date" id="dTo"></span>
+      <label><input type="checkbox" id="compareChk"> Compare with previous period</label>
+      <span class="hint" id="periodLabel"></span>
+    </div>
+
     <div class="kpis" id="teamKpis"></div>
-    <div class="toolbar"><select id="groupSel" class="hidden" style="max-width:240px"></select><input type="search" id="search" placeholder="Search employee or group…"><button class="btn" id="peopleBtn">👥 People &amp; groups</button><span class="hint" id="shownCount"></span></div>
+    <div id="suggestBox"></div>
+    <div class="toolbar">
+      <div class="seg" id="viewSeg"></div>
+      <select id="groupSel" class="hidden"></select>
+      <input type="search" id="search" placeholder="Search employee or group…">
+      <button class="btn" id="peopleBtn">👥 People &amp; groups</button>
+      <span class="hint" id="shownCount"></span>
+    </div>
     <div class="table-wrap"><table id="teamTable"><thead></thead><tbody></tbody></table></div>
-    <p class="hint" style="margin-top:10px">Click a name for the full report (use <span class="kbd">←</span> <span class="kbd">→</span> to flip between people, <span class="kbd">Esc</span> to close). Click a header to sort. People with fewer records than the minimum show no rank. <b>Score</b> = blend of efficiency, completion rate, quality (no callbacks) and billable utilization — whichever your data includes.</p>
+    <div class="cards" id="cards"></div>
+    <p class="hint" style="margin-top:10px">Click a name for the full report (<span class="kbd">←</span> <span class="kbd">→</span> flip between people, <span class="kbd">Esc</span> closes). Hover or tap a <b>score</b> to see how it's calculated. Click a header to sort.</p>
   </section>
 </main>
+<footer>🔒 Tech Tally has no server: your files are read and processed only in this browser, and nothing is uploaded. Works offline, and can be installed as an app.</footer>
 
 <div id="printArea"></div>
+<div id="tip" class="hidden"></div>
 
 <script>
 /* ================= CSV parsing ================= */
 function parseCSV(text){
   if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
-  // detect delimiter from first line
   const first=text.split(/\r?\n/,1)[0]||"";
-  const cands=[",",";","\t","|"];
   let delim=",",best=-1;
-  for(const c of cands){const n=first.split(c).length;if(n>best){best=n;delim=c;}}
+  for(const c of [",",";","\t","|"]){const n=first.split(c).length;if(n>best){best=n;delim=c;}}
   const rows=[];let row=[],f="",q=false;
   for(let i=0;i<text.length;i++){
     const ch=text[i];
-    if(q){
-      if(ch==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; }
-      else f+=ch;
-    }else{
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=ch; }
+    else{
       if(ch==='"') q=true;
       else if(ch===delim){row.push(f);f="";}
-      else if(ch==='\n'||ch==='\r'){
-        if(ch==='\r'&&text[i+1]==='\n') i++;
-        row.push(f);f="";rows.push(row);row=[];
-      } else f+=ch;
+      else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&text[i+1]==='\n') i++; row.push(f);f="";rows.push(row);row=[]; }
+      else f+=ch;
     }
   }
   if(f!==""||row.length){row.push(f);rows.push(row);}
-  return rows.filter(r=>r.some(c=>String(c).trim()!==""));
+  return rows;
 }
-function csvEscape(v){
-  if(v==null) v="";
-  v=String(v);
-  return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
-}
+function csvEscape(v){ if(v==null) v=""; v=String(v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
 function toCSV(rows){return rows.map(r=>r.map(csvEscape).join(",")).join("\r\n");}
 
 /* ================= State ================= */
@@ -244,18 +361,20 @@ const FIELDS=[
   {key:"inspection",label:"Inspection result",pat:[/inspect|pass|fail/]},
   {key:"safety",label:"Safety incidents",pat:[/safety|incident|injur/]},
 ];
-let files=[]; // {name, headers, rows}
-let mapping={}; // key -> header name
-let results=[], scope=[], shownList=[]; let sortKey="score", sortAsc=false;
+let files=[], mapping={};
+const userNone=new Set();
+let results=[], scope=[], shownList=[], ISSUES=null, ALL=new Map(), PERIOD=null;
+let sortKey="score", sortAsc=false;
 const store={get(k,d){try{const v=localStorage.getItem("techtally."+k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem("techtally."+k,JSON.stringify(v));}catch(e){}}};
-let people=store.get("people",{aliases:{},groups:{}}); // aliases: rawName->displayName, groups: displayName->group
+let people=Object.assign({aliases:{},groups:{},notes:{},notSame:[]},store.get("people",{}));
 function savePeople(){store.set("people",people);}
+let VIEW=store.get("view","overview");
 
 const $=s=>document.querySelector(s);
 function setTheme(t){document.documentElement.dataset.theme=t;$("#themeBtn").textContent=t==="light"?"☾ Dark":"☀ Light";store.set("theme",t);}
 setTheme(store.get("theme","dark"));
 $("#themeBtn").onclick=()=>setTheme(document.documentElement.dataset.theme==="light"?"dark":"light");
-function toast(msg){document.querySelectorAll(".toast").forEach(x=>x.remove());const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),300);},2200);}
+function toast(msg){document.querySelectorAll(".toast").forEach(x=>x.remove());const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.remove(),300);},2600);}
 
 /* ================= File handling ================= */
 const drop=$("#drop"), fileInput=$("#fileInput");
@@ -263,91 +382,80 @@ drop.addEventListener("click",()=>fileInput.click());
 ["dragenter","dragover"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add("over");}));
 ["dragleave","drop"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove("over");}));
 drop.addEventListener("drop",ev=>addFiles(ev.dataTransfer.files));
-// allow dropping anywhere on the page
 window.addEventListener("dragover",e=>e.preventDefault());
 window.addEventListener("drop",e=>{e.preventDefault(); if(e.target.closest&&!e.target.closest("#drop")) addFiles(e.dataTransfer.files);});
 fileInput.addEventListener("change",()=>{addFiles(fileInput.files);fileInput.value="";});
 
 async function addFiles(list){
+  let n=0;
   for(const f of list){
-    if(!/\.(csv|txt|tsv)$/i.test(f.name) && f.type && !/csv|text/.test(f.type)) continue;
-    const text=await f.text();
-    loadText(f.name,text);
+    if(!/\.(csv|txt|tsv)$/i.test(f.name) && f.type && !/csv|text/.test(f.type)){toast(`${f.name} isn't a CSV, so it was skipped`);continue;}
+    loadText(f.name,await f.text()); n++;
   }
-  refresh();
+  if(n) refresh();
 }
 function loadText(name,text){
   const rows=parseCSV(text);
-  if(rows.length<2) return;
-  // find header row: first row with >=2 non-empty cells among first 10
+  if(rows.filter(r=>r.some(c=>String(c).trim())).length<2){toast(`${name} has no data rows`);return;}
   let h=0;
   for(let i=0;i<Math.min(10,rows.length);i++){ if(rows[i].filter(c=>c.trim()).length>=2){h=i;break;} }
   const headers=rows[h].map(x=>x.trim());
-  const data=rows.slice(h+1).map(r=>{const o={};headers.forEach((k,i)=>o[k]=(r[i]??"").trim());return o;});
+  const data=[];
+  for(let i=h+1;i<rows.length;i++){
+    const r=rows[i]; if(!r.some(c=>String(c).trim())) continue;
+    const o={__line:i+1}; headers.forEach((k,j)=>o[k]=(r[j]??"").trim()); data.push(o);
+  }
   files=files.filter(f=>f.name!==name);
   files.push({name,headers,rows:data});
 }
 $("#clearBtn").onclick=()=>{files=[];mapping={};userNone.clear();refresh();};
 
 function allHeaders(){const s=new Set();files.forEach(f=>f.headers.forEach(h=>h&&s.add(h)));return [...s];}
-
 function detect(fd,hs,used){
   for(const p of fd.pat){ for(const h of hs){ const l=h.toLowerCase().trim(); if(used.has(h)) continue; if(fd.not&&fd.not.test(l)) continue; if(p.test(l)) return h; } }
   return "";
 }
-// per-file mapping: use the chosen column if this file has it, otherwise auto-detect within this file
 function fileMap(f){
   const m={},used=new Set();
   for(const fd of FIELDS){ const g=mapping[fd.key]; if(g&&f.headers.includes(g)){m[fd.key]=g;used.add(g);} }
   for(const fd of FIELDS){ if(m[fd.key]) continue; if(userNone.has(fd.key)){m[fd.key]="";continue;} m[fd.key]=detect(fd,f.headers,used); if(m[fd.key]) used.add(m[fd.key]); }
   return m;
 }
-const userNone=new Set();
 function autoMap(){
   const hs=allHeaders(); const used=new Set(); const m={};
   for(const fd of FIELDS){
     if(mapping[fd.key]!==undefined && (mapping[fd.key]===""||hs.includes(mapping[fd.key]))){m[fd.key]=mapping[fd.key]; if(m[fd.key]) used.add(m[fd.key]); continue;}
-    let found="";
-    outer: for(const p of fd.pat){
-      for(const h of hs){
-        const l=h.toLowerCase().trim();
-        if(used.has(h)) continue;
-        if(fd.not && fd.not.test(l)) continue;
-        if(p.test(l)){found=h;break outer;}
-      }
-    }
-    m[fd.key]=found; if(found) used.add(found);
+    const found=detect(fd,hs,used); m[fd.key]=found; if(found) used.add(found);
   }
-  // if both first+last and an "employee" guess that's actually something else, prefer explicit
   mapping=m;
 }
-
 function renderFiles(){
   const total=files.reduce((a,f)=>a+f.rows.length,0);
-  $("#fileList").innerHTML=files.map((f,i)=>`<span class="chip">📄 ${esc(f.name)} <small style="color:#888">(${f.rows.length} rows)</small><button title="Remove" data-i="${i}">×</button></span>`).join("");
+  $("#fileList").innerHTML=files.map((f,i)=>`<span class="chip">📄 ${esc(f.name)} <small style="color:var(--muted)">(${f.rows.length} rows)</small><button title="Remove" data-i="${i}">×</button></span>`).join("");
   $("#fileList").querySelectorAll("button").forEach(b=>b.onclick=()=>{files.splice(+b.dataset.i,1);refresh();});
-  $("#rowCount").textContent=files.length?`${files.length} file(s), ${total} rows total`:"";
+  $("#rowCount").textContent=files.length?`${files.length} file(s), ${total} rows`:"";
+  drop.classList.toggle("compact",files.length>0);
+  $("#fileHead").textContent=files.length?"Files":"1. Add CSV files";
 }
 function renderMap(){
   const hs=allHeaders();
   $("#mapGrid").innerHTML=FIELDS.map(fd=>`<div><label><b>${fd.label}</b>${fd.req?' *':''}</label><select data-k="${fd.key}"><option value="">— not in my data —</option>${hs.map(h=>`<option ${mapping[fd.key]===h?"selected":""}>${esc(h)}</option>`).join("")}</select></div>`).join("");
   updateMapSummary();
-  $("#mapGrid").querySelectorAll("select").forEach(s=>s.onchange=()=>{updateMapSummary();mapping[s.dataset.k]=s.value; if(s.value) userNone.delete(s.dataset.k); else userNone.add(s.dataset.k); compute();});
+  $("#mapGrid").querySelectorAll("select").forEach(s=>s.onchange=()=>{mapping[s.dataset.k]=s.value; if(s.value) userNone.delete(s.dataset.k); else userNone.add(s.dataset.k); updateMapSummary(); compute();});
 }
 function updateMapSummary(){
   const fms=files.map(fileMap); const on=FIELDS.filter(fd=>fms.some(m=>m[fd.key]));
   $("#mapSummary").textContent=`· ${on.length} of ${FIELDS.length} fields found`;
   $("#mapTags").innerHTML=FIELDS.map(fd=>`<span class="tag ${on.includes(fd)?"":"off"}">${on.includes(fd)?"✓":"–"} ${fd.label}</span>`).join("");
-  const needName=!on.some(f=>["employee","first","last"].includes(f.key));
-  if(needName) $("#mapDetails").open=true;
+  if(!on.some(f=>["employee","first","last"].includes(f.key))) $("#mapDetails").open=true;
 }
 ["#setWeek","#setDay","#setTarget","#setMin"].forEach(id=>$(id).addEventListener("input",()=>compute()));
+$("#setDedupe").addEventListener("change",()=>compute());
 
 function refresh(){
   renderFiles();
   const has=files.length>0;
-  $("#mapPanel").classList.toggle("hidden",!has);
-  $("#resultPanel").classList.toggle("hidden",!has);
+  ["#mapPanel","#checkPanel","#resultPanel"].forEach(id=>$(id).classList.toggle("hidden",!has));
   $("#st1").className="step "+(has?"done":"on"); $("#st2").className="step "+(has?"done":""); $("#st3").className="step "+(has?"on":"");
   if(!has){results=[];scope=[];return;}
   autoMap(); renderMap(); compute();
@@ -357,15 +465,14 @@ function refresh(){
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function num(v){
   if(v==null) return NaN; v=String(v).trim(); if(!v) return NaN;
-  // h:mm duration
   let m=v.match(/^(\d+):(\d{1,2})(?::\d{1,2})?$/); if(m && !/am|pm/i.test(v)) return +m[1]+ +m[2]/60;
   m=v.match(/^(\d+(?:\.\d+)?)\s*h(?:rs?|ours?)?\s*(?:(\d+)\s*m(?:in)?s?)?$/i); if(m) return +m[1]+(m[2]?+m[2]/60:0);
+  if(!/^[-($]*\s*\$?\s*[\d.,]+\s*\)?$/.test(v)) return NaN;
   const n=parseFloat(v.replace(/[$,\s]/g,"").replace(/\((.*)\)/,"-$1"));
   return isNaN(n)?NaN:n;
 }
 function parseTime(v){
   if(!v) return NaN; v=String(v).trim();
-  // may include date
   const m=v.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([ap]\.?m\.?)?/i);
   if(m){let h=+m[1];const mi=+m[2];const ap=m[4]&&m[4][0].toLowerCase();if(ap==="p"&&h<12)h+=12;if(ap==="a"&&h===12)h=0;return h+mi/60;}
   const m2=v.match(/^(\d{1,2})\s*([ap])\.?m?\.?$/i); if(m2){let h=+m2[1];if(m2[2].toLowerCase()==="p"&&h<12)h+=12;if(m2[2].toLowerCase()==="a"&&h===12)h=0;return h;}
@@ -375,12 +482,16 @@ function parseTime(v){
 function parseDate(v){
   if(!v) return null; v=String(v).trim();
   let m=v.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
-  m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[1]-1,+m[2]);} // US M/D/Y
-  const n=num(v); if(!isNaN(n)&&n>20000&&n<80000){return new Date(Math.round((n-25569)*864e5)+new Date().getTimezoneOffset()*6e4);} // Excel serial
+  m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/); if(m){let y=+m[3];if(y<100)y+=2000;const mo=+m[1],da=+m[2];if(mo>12&&da<=12)return new Date(y,da-1,mo);return new Date(y,mo-1,da);}
+  const n=num(v); if(!isNaN(n)&&n>20000&&n<80000){const d=new Date(Math.round((n-25569)*864e5));return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());}
   const d=new Date(v); return isNaN(d)?null:new Date(d.getFullYear(),d.getMonth(),d.getDate());
 }
+const DAY=864e5;
 function dkey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
-function weekKey(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return dkey(x);}
+function fromKey(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d);}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function weekKey(d){const x=new Date(d);x.setDate(x.getDate()-((x.getDay()+6)%7));return dkey(x);}
+function shortDate(d){return d.toLocaleDateString(undefined,{month:"short",day:"numeric"});}
 function truthy(v){
   if(v==null) return false; v=String(v).trim().toLowerCase(); if(!v) return false;
   if(/^(y|yes|true|1|x|✓|✔)$/.test(v)) return true;
@@ -397,129 +508,206 @@ function isComplete(v){
 }
 function normName(s){
   s=String(s||"").replace(/\s+/g," ").trim(); if(!s) return "";
-  // "Last, First" -> "First Last"
   const m=s.match(/^([^,]+),\s*(.+)$/); if(m) s=m[2]+" "+m[1];
-  return s.toLowerCase().replace(/\b([a-z])/g,c=>c.toUpperCase()).replace(/\bMc([a-z])/g,(a,b)=>"Mc"+b.toUpperCase());
+  return s.toLowerCase().replace(/(^|[\s\-'.])([a-z])/g,(a,p,c)=>p+c.toUpperCase()).replace(/\bMc([a-z])/g,(a,b)=>"Mc"+b.toUpperCase());
 }
 const fmt=(n,d=1)=>(n==null||isNaN(n)||!isFinite(n))?"—":Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 const pct=(n,d=0)=>(n==null||isNaN(n)||!isFinite(n))?"—":fmt(n*100,d)+"%";
 const money=n=>(n==null||isNaN(n))?"—":"$"+Number(n).toLocaleString(undefined,{maximumFractionDigits:0});
+const target=()=>(+$("#setTarget").value||100)/100;
+
+/* ================= Build rows + data check ================= */
+function buildRows(){
+  const fms=files.map(fileMap);
+  const M={}; FIELDS.forEach(fd=>M[fd.key]=fms.some(m=>m[fd.key])?(mapping[fd.key]||"(auto)"):""); window.EFFMAP=M;
+  const issues=[]; const seen=new Map(); let used=0,total=0,dups=0,noName=0,badHrs=0,badDate=0,odd=0,noDate=0;
+  const emps=new Map(); const dedupe=$("#setDedupe").checked;
+  files.forEach((f,fi)=>{ const FM=fms[fi];
+    for(const r of f.rows){
+      total++;
+      let name=FM.employee?r[FM.employee]:"";
+      if((!name||!FM.employee)&&(FM.first||FM.last)) name=[r[FM.first]||"",r[FM.last]||""].join(" ");
+      const raw=normName(name);
+      const dateRaw=FM.date?r[FM.date]:"";
+      let hrsRaw=FM.hours?r[FM.hours]:"";
+      const base={file:f.name,line:r.__line,emp:raw||"",date:dateRaw,hours:hrsRaw||(FM.start?`${r[FM.start]||""}–${r[FM.end]||""}`:"")};
+      if(!raw){noName++;issues.push({...base,issue:"No employee name, so the row was skipped"});continue;}
+      let hrs=FM.hours?num(hrsRaw):NaN;
+      if(isNaN(hrs)&&FM.start&&FM.end){const s=parseTime(r[FM.start]),en=parseTime(r[FM.end]);if(!isNaN(s)&&!isNaN(en)){hrs=en-s;if(hrs<0)hrs+=24;}}
+      if((FM.hours||FM.start)&&isNaN(hrs)){badHrs++;issues.push({...base,issue:hrsRaw?`Hours not readable ("${hrsRaw}"), counted as 0`:"No hours, counted as 0"});}
+      else if(hrs<0||hrs>16){odd++;issues.push({...base,issue:`Unusual hours (${fmt(hrs)}). Check this row`});}
+      const d=FM.date?parseDate(dateRaw):null;
+      if(FM.date&&!d){ if(dateRaw){badDate++;issues.push({...base,issue:`Date not readable ("${dateRaw}")`});} else noDate++; }
+      const job=FM.job?(r[FM.job]||"").trim():"", task=FM.task?(r[FM.task]||"").trim():"";
+      const est=FM.est?num(r[FM.est]):NaN;
+      if(d||job){
+        const key=[raw,d?dkey(d):"",job.toLowerCase(),task.toLowerCase(),isNaN(hrs)?"":hrs.toFixed(2),isNaN(est)?"":est,FM.start?r[FM.start]:""].join("|");
+        if(seen.has(key)){
+          dups++; const o=seen.get(key);
+          issues.push({...base,issue:`Duplicate of ${o.file} row ${o.line}${dedupe?". Removed":". Kept (removal off)"}`});
+          if(dedupe) continue;
+        } else seen.set(key,{file:f.name,line:r.__line});
+      }
+      const nameD=people.aliases[raw]||raw;
+      if(!emps.has(nameD)) emps.set(nameD,{name:nameD,rows:[],files:new Set(),raws:new Set(),gc:{}});
+      const e=emps.get(nameD); e.files.add(f.name); e.raws.add(raw);
+      if(FM.group){const gv=String(r[FM.group]||"").trim(); if(gv) e.gc[gv]=(e.gc[gv]||0)+1;}
+      let bill=NaN; if(FM.billable){const bv=num(r[FM.billable]); bill=!isNaN(bv)?bv:(truthy(r[FM.billable])?(isNaN(hrs)?0:hrs):0);}
+      e.rows.push({
+        hrs:isNaN(hrs)?0:hrs, hasHrs:!isNaN(hrs), d, est, job, task, file:f.name,
+        done:FM.status?isComplete(r[FM.status]):null,
+        cb:FM.callback?countVal(r[FM.callback]):0,
+        bill, ot:FM.ot?num(r[FM.ot]):NaN,
+        rev:FM.revenue?num(r[FM.revenue]):NaN,
+        insp:FM.inspection?String(r[FM.inspection]||"").trim().toLowerCase():"",
+        safety:FM.safety?countVal(r[FM.safety]):0,
+      });
+      used++;
+    }
+  });
+  ISSUES={list:issues,total,used,dups,noName,badHrs,badDate,odd,noDate,dedupe};
+  return emps;
+}
+function renderDataCheck(){
+  const I=ISSUES; const parts=[];
+  if(I.dups) parts.push(`${I.dups} duplicate${I.dups>1?"s":""} ${I.dedupe?"removed":"found"}`);
+  if(I.noName) parts.push(`${I.noName} row${I.noName>1?"s":""} with no name`);
+  if(I.badHrs) parts.push(`${I.badHrs} with unreadable or missing hours`);
+  if(I.odd) parts.push(`${I.odd} with unusual hours`);
+  if(I.badDate) parts.push(`${I.badDate} with unreadable dates`);
+  $("#checkSummary").innerHTML=parts.length
+    ?`<span class="check-warn">⚠ ${I.used} of ${I.total} rows used</span> <span class="hint">· ${parts.join(" · ")}</span>`
+    :`<span class="check-ok">✓ All ${I.total} rows used</span> <span class="hint">· no problems found</span>`;
+  $("#checkDetails").querySelector(".tog").classList.toggle("hidden",!I.list.length);
+  $("#issueTable tbody").innerHTML=I.list.length?I.list.slice(0,500).map(x=>`<tr><td>${esc(x.file)}</td><td>${x.line}</td><td style="text-align:left">${esc(x.issue)}</td><td style="text-align:left">${esc(x.emp)||"<span class='hint'>(blank)</span>"}</td><td style="text-align:left">${esc(x.date)}</td><td style="text-align:left">${esc(x.hours)}</td></tr>`).join(""):`<tr><td colspan="6" class="empty">No issues 🎉</td></tr>`;
+  $("#issuesCsv").disabled=!I.list.length;
+}
+function issuesRows(){return [["File","Row","Issue","Employee","Date","Hours"],...ISSUES.list.map(x=>[x.file,x.line,x.issue,x.emp,x.date,x.hours])];}
+$("#issuesCsv").onclick=()=>download(`data_issues_${dkey(new Date())}.csv`,toCSV(issuesRows()),"text/csv");
+
+/* ================= Period ================= */
+function computePeriod(emps){
+  let max=null,min=null;
+  emps.forEach(e=>e.rows.forEach(r=>{if(r.d){if(!max||r.d>max)max=r.d;if(!min||r.d<min)min=r.d;}}));
+  const sel=$("#periodSel").value; const cmp=$("#compareChk").checked;
+  $("#customDates").classList.toggle("hidden",sel!=="custom");
+  $("#periodBar").classList.toggle("hidden",!max);
+  if(!max||sel==="all"){ $("#compareChk").disabled=true; $("#compareChk").checked=false; $("#compareChk").parentElement.title="Pick a period to compare";
+    $("#periodLabel").textContent=max?`${shortDate(min)} – ${shortDate(max)}${ISSUES.noDate?` · ${ISSUES.noDate} rows without dates included`:""}`:"";
+    return {all:true,compare:false}; }
+  $("#compareChk").disabled=false; $("#compareChk").parentElement.title="";
+  let from,to,pf,pt;
+  if(sel==="month"){ from=new Date(max.getFullYear(),max.getMonth(),1); to=new Date(max.getFullYear(),max.getMonth()+1,0); pf=new Date(from.getFullYear(),from.getMonth()-1,1); pt=addDays(from,-1); }
+  else if(sel==="custom"){
+    if(!$("#dFrom").value){$("#dFrom").value=dkey(addDays(max,-27));$("#dTo").value=dkey(max);}
+    from=fromKey($("#dFrom").value); to=$("#dTo").value?fromKey($("#dTo").value):max; if(to<from)[from,to]=[to,from];
+    const len=Math.round((to-from)/DAY)+1; pt=addDays(from,-1); pf=addDays(from,-len);
+  } else { const n=+sel; to=max; from=addDays(max,-(n-1)); pt=addDays(from,-1); pf=addDays(from,-n); }
+  const lbl=d=>d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:from.getFullYear()!==to.getFullYear()?"numeric":undefined});
+  $("#periodLabel").textContent=`${lbl(from)} – ${lbl(to)}`+(cmp?`  vs  ${lbl(pf)} – ${lbl(pt)}`:"")+(ISSUES.noDate?` · ${ISSUES.noDate} rows without dates only appear under All dates`:"");
+  return {all:false,from,to,pf,pt,compare:cmp};
+}
+$("#periodSel").addEventListener("change",()=>compute());
+$("#compareChk").addEventListener("change",()=>compute());
+["#dFrom","#dTo"].forEach(id=>$(id).addEventListener("change",()=>compute()));
+
+/* ================= Stats ================= */
+function statsFor(e,R){
+  const M=window.EFFMAP, weekStd=+$("#setWeek").value||40, dayStd=+$("#setDay").value||8, T=target();
+  const s={name:e.name,entries:R.length,files:[...new Set(R.map(r=>r.file))],raws:[...e.raws]};
+  const csvG=Object.entries(e.gc).sort((a,b)=>b[1]-a[1])[0]; s.csvGroup=csvG?csvG[0]:"";
+  s.group=people.groups[e.name]!==undefined?people.groups[e.name]:s.csvGroup;
+  s.hours=R.reduce((a,r)=>a+r.hrs,0);
+  const days=new Set(R.filter(r=>r.d).map(r=>dkey(r.d))); s.days=days.size||null;
+  const dates=R.filter(r=>r.d).map(r=>r.d.getTime());
+  s.from=dates.length?new Date(Math.min(...dates)):null; s.to=dates.length?new Date(Math.max(...dates)):null;
+  s.avgDay=s.days?s.hours/s.days:null;
+  const jobs=new Set(R.filter(r=>r.job).map(r=>r.job.toLowerCase()));
+  s.jobs=M.job?jobs.size:null; s.hrsPerJob=s.jobs?s.hours/s.jobs:null;
+  const er=R.filter(r=>!isNaN(r.est)&&r.est>0&&r.hasHrs&&r.hrs>0);
+  s.estH=er.reduce((a,r)=>a+r.est,0); s.actH=er.reduce((a,r)=>a+r.hrs,0);
+  s.eff=er.length&&s.actH?s.estH/s.actH:null;
+  s.onBudget=er.length?er.filter(r=>r.hrs<=r.est*1.0001).length/er.length:null;
+  s.effRows=er.length; s.hoursVar=er.length?s.actH-s.estH:null;
+  const st=R.filter(r=>r.done!==null);
+  s.completed=st.length?st.filter(r=>r.done).length:null; s.compRate=st.length?s.completed/st.length:null;
+  s.callbacks=M.callback?R.reduce((a,r)=>a+r.cb,0):null;
+  s.cbDenom=s.jobs||s.completed||s.entries;
+  s.cbRate=M.callback&&s.cbDenom?s.callbacks/s.cbDenom:null;
+  s.billH=M.billable?R.reduce((a,r)=>a+(isNaN(r.bill)?0:r.bill),0):null;
+  s.util=M.billable&&s.hours?s.billH/s.hours:null;
+  const wk={};R.forEach(r=>{if(r.d){const k=weekKey(r.d);wk[k]=(wk[k]||0)+r.hrs;}});
+  s.weekly=Object.entries(wk).sort((a,b)=>a[0]<b[0]?-1:1);
+  if(M.ot){s.ot=R.reduce((a,r)=>a+(isNaN(r.ot)?0:r.ot),0);}
+  else if(s.weekly.length){s.ot=s.weekly.reduce((a,[,h])=>a+Math.max(0,h-weekStd),0);}
+  else s.ot=null;
+  s.rev=M.revenue?R.reduce((a,r)=>a+(isNaN(r.rev)?0:r.rev),0):null;
+  s.revPerHr=s.rev!=null&&s.hours?s.rev/s.hours:null;
+  if(M.inspection){const ins=R.filter(r=>r.insp);s.inspN=ins.length;s.inspPass=ins.length?ins.filter(r=>/pass|ok|approved|^y|good/.test(r.insp)&&!/fail/.test(r.insp)).length/ins.length:null;} else s.inspPass=null;
+  s.safety=M.safety?R.reduce((a,r)=>a+r.safety,0):null;
+  const tb={};R.forEach(r=>{const k=r.task||"(unspecified)";tb[k]=tb[k]||{n:0,h:0,est:0,act:0};tb[k].n++;tb[k].h+=r.hrs;if(!isNaN(r.est)&&r.est>0&&r.hrs>0){tb[k].est+=r.est;tb[k].act+=r.hrs;}});
+  s.tasks=Object.entries(tb).sort((a,b)=>b[1].h-a[1].h);
+  const dl={};R.forEach(r=>{if(r.d){const k=dkey(r.d);dl[k]=(dl[k]||0)+r.hrs;}}); s.longDays=Object.values(dl).filter(h=>h>dayStd).length;
+  // score with breakdown
+  const parts=[];
+  if(s.eff!=null) parts.push({label:"Efficiency",val:Math.min(s.eff/T,1.2)/1.2*100,w:.4,detail:`${pct(s.eff)} vs target ${pct(T)} (full marks at ${pct(T*1.2)})`});
+  if(s.compRate!=null) parts.push({label:"Completion",val:s.compRate*100,w:.25,detail:`${pct(s.compRate)} of jobs completed`});
+  if(s.cbRate!=null) parts.push({label:"Callbacks",val:Math.max(0,1-s.cbRate*5)*100,w:.2,detail:`${s.callbacks} callback${s.callbacks===1?"":"s"} (${pct(s.cbRate,1)}); 0 at 20%+`});
+  if(s.inspPass!=null) parts.push({label:"Inspections",val:s.inspPass*100,w:.15,detail:`${pct(s.inspPass)} passed`});
+  if(s.util!=null) parts.push({label:"Billable",val:Math.min(s.util/0.85,1)*100,w:.15,detail:`${pct(s.util)} billable (full marks at 85%)`});
+  const W=parts.reduce((a,p)=>a+p.w,0);
+  parts.forEach(p=>{p.max=p.w/W*100;p.pts=p.val*p.w/W;});
+  s.scoreParts=parts; s.score=W?parts.reduce((a,p)=>a+p.pts,0):null;
+  s._rows=R;
+  return s;
+}
 
 /* ================= Compute ================= */
 function compute(){
-  const fms=files.map(fileMap);
-  const M={}; FIELDS.forEach(fd=>M[fd.key]=fms.some(m=>m[fd.key])?(mapping[fd.key]||"(auto)"):""); window.EFFMAP=M;
-  const weekStd=+$("#setWeek").value||40, dayStd=+$("#setDay").value||8, target=(+$("#setTarget").value||100)/100;
-  const emps=new Map();
-  files.forEach((f,fi)=>{ const M=fms[fi];
-    for(const r of f.rows){
-      let name="";
-      if(M.employee) name=r[M.employee];
-      if((!name||!M.employee) && (M.first||M.last)) name=[r[M.first]||"",r[M.last]||""].join(" ");
-      const raw=normName(name); if(!raw) continue;
-      name=people.aliases[raw]||raw;
-      if(!emps.has(name)) emps.set(name,{name,rows:[],files:new Set(),raws:new Set(),gc:{}});
-      const e=emps.get(name); e.files.add(f.name); e.raws.add(raw);
-      if(M.group){const gv=String(r[M.group]||"").trim(); if(gv) e.gc[gv]=(e.gc[gv]||0)+1;}
-      let hrs=M.hours?num(r[M.hours]):NaN;
-      if(isNaN(hrs)&&M.start&&M.end){const s=parseTime(r[M.start]),en=parseTime(r[M.end]);if(!isNaN(s)&&!isNaN(en)){hrs=en-s;if(hrs<0)hrs+=24;}}
-      const d=M.date?parseDate(r[M.date]):null;
-      let bill=NaN; if(M.billable){const bv=num(r[M.billable]); bill=!isNaN(bv)?bv:(truthy(r[M.billable])?(isNaN(hrs)?0:hrs):0);}
-      e.rows.push({
-        hrs:isNaN(hrs)?0:hrs, hasHrs:!isNaN(hrs), d,
-        est:M.est?num(r[M.est]):NaN,
-        job:M.job?(r[M.job]||"").trim():"",
-        task:M.task?(r[M.task]||"").trim():"",
-        done:M.status?isComplete(r[M.status]):null,
-        cb:M.callback?countVal(r[M.callback]):0,
-        bill, ot:M.ot?num(r[M.ot]):NaN,
-        rev:M.revenue?num(r[M.revenue]):NaN,
-        insp:M.inspection?String(r[M.inspection]||"").trim().toLowerCase():"",
-        safety:M.safety?countVal(r[M.safety]):0,
-      });
-    }
+  const emps=buildRows(); ALL=emps;
+  renderDataCheck();
+  PERIOD=computePeriod(emps);
+  const P=PERIOD, inR=(r,a,b)=>r.d&&r.d>=a&&r.d<=b;
+  results=[];
+  emps.forEach(e=>{
+    const R=P.all?e.rows:e.rows.filter(r=>inR(r,P.from,P.to));
+    if(!R.length) return;
+    const s=statsFor(e,R);
+    if(P.compare){const PR=e.rows.filter(r=>inR(r,P.pf,P.pt)); s.prev=PR.length?statsFor(e,PR):null;}
+    results.push(s);
   });
-  results=[...emps.values()].map(e=>{
-    const R=e.rows; const s={name:e.name,entries:R.length,files:[...e.files],raws:[...e.raws]};
-    const csvG=Object.entries(e.gc).sort((a,b)=>b[1]-a[1])[0]; s.csvGroup=csvG?csvG[0]:"";
-    s.group=people.groups[e.name]!==undefined?people.groups[e.name]:s.csvGroup;
-    s.hours=R.reduce((a,r)=>a+r.hrs,0);
-    const days=new Set(R.filter(r=>r.d).map(r=>dkey(r.d)));
-    s.days=days.size||null;
-    const dates=R.filter(r=>r.d).map(r=>r.d.getTime());
-    s.from=dates.length?new Date(Math.min(...dates)):null; s.to=dates.length?new Date(Math.max(...dates)):null;
-    s.avgDay=s.days?s.hours/s.days:null;
-    // jobs
-    const jobs=new Set(R.filter(r=>r.job).map(r=>r.job.toLowerCase()));
-    s.jobs=M.job?jobs.size:null;
-    s.hrsPerJob=s.jobs?s.hours/s.jobs:null;
-    // efficiency (only rows with both est & actual)
-    const er=R.filter(r=>!isNaN(r.est)&&r.est>0&&r.hasHrs&&r.hrs>0);
-    s.estH=er.reduce((a,r)=>a+r.est,0); s.actH=er.reduce((a,r)=>a+r.hrs,0);
-    s.eff=er.length&&s.actH?s.estH/s.actH:null;
-    s.onBudget=er.length?er.filter(r=>r.hrs<=r.est*1.0001).length/er.length:null;
-    s.effRows=er.length;
-    s.hoursVar=er.length?s.actH-s.estH:null;
-    // completion
-    const st=R.filter(r=>r.done!==null);
-    s.completed=st.length?st.filter(r=>r.done).length:null;
-    s.compRate=st.length?s.completed/st.length:null;
-    // callbacks
-    s.callbacks=M.callback?R.reduce((a,r)=>a+r.cb,0):null;
-    const denom=s.jobs||s.completed||s.entries;
-    s.cbRate=M.callback&&denom?s.callbacks/denom:null;
-    // billable
-    s.billH=M.billable?R.reduce((a,r)=>a+(isNaN(r.bill)?0:r.bill),0):null;
-    s.util=M.billable&&s.hours?s.billH/s.hours:null;
-    // overtime
-    if(M.ot){s.ot=R.reduce((a,r)=>a+(isNaN(r.ot)?0:r.ot),0);}
-    else if(R.some(r=>r.d)){
-      const wk={};R.forEach(r=>{if(r.d){const k=weekKey(r.d);wk[k]=(wk[k]||0)+r.hrs;}});
-      s.ot=Object.values(wk).reduce((a,h)=>a+Math.max(0,h-weekStd),0);
-      s.weeks=Object.keys(wk).length;
-    } else s.ot=null;
-    // revenue
-    s.rev=M.revenue?R.reduce((a,r)=>a+(isNaN(r.rev)?0:r.rev),0):null;
-    s.revPerHr=s.rev!=null&&s.hours?s.rev/s.hours:null;
-    // inspections
-    if(M.inspection){const ins=R.filter(r=>r.insp);s.inspN=ins.length;s.inspPass=ins.length?ins.filter(r=>/pass|ok|approved|^y|good/.test(r.insp)&&!/fail/.test(r.insp)).length/ins.length:null;} else {s.inspPass=null;}
-    s.safety=M.safety?R.reduce((a,r)=>a+r.safety,0):null;
-    // task breakdown
-    const tb={};R.forEach(r=>{const k=r.task||"(unspecified)";tb[k]=tb[k]||{n:0,h:0,est:0,act:0};tb[k].n++;tb[k].h+=r.hrs;if(!isNaN(r.est)&&r.est>0&&r.hrs>0){tb[k].est+=r.est;tb[k].act+=r.hrs;}});
-    s.tasks=Object.entries(tb).sort((a,b)=>b[1].h-a[1].h);
-    // daily
-    const dl={};R.forEach(r=>{if(r.d){const k=dkey(r.d);dl[k]=(dl[k]||0)+r.hrs;}}); s.daily=dl;
-    s.longDays=Object.values(dl).filter(h=>h>dayStd).length;
-    s._rows=R;
-    // score
-    const parts=[];
-    if(s.eff!=null) parts.push([Math.min(s.eff/target,1.2)/1.2*100,0.4]);
-    if(s.compRate!=null) parts.push([s.compRate*100,0.25]);
-    if(s.cbRate!=null) parts.push([Math.max(0,1-s.cbRate*5)*100,0.2]);
-    if(s.inspPass!=null) parts.push([s.inspPass*100,0.15]);
-    if(s.util!=null) parts.push([Math.min(s.util/0.85,1)*100,0.15]);
-    const w=parts.reduce((a,p)=>a+p[1],0);
-    s.score=w?parts.reduce((a,p)=>a+p[0]*p[1],0)/w:null;
-    return s;
-  });
+  renderSuggestions();
   renderGroupSel(); applyScope();
 }
 function groupsList(){const g=new Set(results.map(r=>r.group||""));return [...g].sort((a,b)=>a===""?1:b===""?-1:a.localeCompare(b));}
 function renderGroupSel(){
   const sel=$("#groupSel"), cur=sel.value, gs=groupsList();
-  const has=gs.some(g=>g);
-  sel.classList.toggle("hidden",!has);
+  sel.classList.toggle("hidden",!gs.some(g=>g));
   sel.innerHTML=`<option value="__all">All employees (${results.length})</option>`+gs.map(g=>`<option value="${esc(g)}">${g?esc(g):"(No group)"} (${results.filter(r=>(r.group||"")===g).length})</option>`).join("");
   sel.value=[...sel.options].some(o=>o.value===cur)?cur:"__all";
+  $("#exportGroups").classList.toggle("hidden",!gs.some(g=>g));
 }
 function inScope(r){const g=$("#groupSel").value;return g==="__all"||!g||(r.group||"")===g;}
-function computeTeam(list){
-  const team={};
+function teamAgg(list){
+  const t={};
   const avg=k=>{const v=list.map(r=>r[k]).filter(x=>x!=null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;};
-  ["hours","days","avgDay","jobs","hrsPerJob","eff","onBudget","compRate","cbRate","util","ot","rev","revPerHr","score","inspPass"].forEach(k=>team[k]=avg(k));
-  team.totHours=list.reduce((a,r)=>a+r.hours,0);
-  const tEst=list.reduce((a,r)=>a+r.estH,0),tAct=list.reduce((a,r)=>a+r.actH,0); team.effAll=tAct?tEst/tAct:null;
-  window.TEAM=team;
+  ["hours","days","avgDay","jobs","hrsPerJob","eff","onBudget","compRate","cbRate","util","ot","rev","revPerHr","score","inspPass"].forEach(k=>t[k]=avg(k));
+  t.n=list.length; t.totHours=list.reduce((a,r)=>a+r.hours,0);
+  const tEst=list.reduce((a,r)=>a+r.estH,0),tAct=list.reduce((a,r)=>a+r.actH,0); t.effAll=tAct?tEst/tAct:null;
+  const cbs=list.filter(r=>r.callbacks!=null); t.callbacks=cbs.length?cbs.reduce((a,r)=>a+r.callbacks,0):null;
+  const den=cbs.reduce((a,r)=>a+r.cbDenom,0); t.cbAll=cbs.length&&den?t.callbacks/den:null;
+  const ots=list.filter(r=>r.ot!=null); t.otTot=ots.length?ots.reduce((a,r)=>a+r.ot,0):null;
+  const st=list.filter(r=>r.compRate!=null); t.compAll=st.length?st.reduce((a,r)=>a+r.completed,0)/st.reduce((a,r)=>a+r.completed/r.compRate,0):null;
+  const bl=list.filter(r=>r.util!=null); t.utilAll=bl.length?bl.reduce((a,r)=>a+r.billH,0)/bl.reduce((a,r)=>a+r.hours,0):null;
+  const allDays=new Set(); list.forEach(r=>r._rows.forEach(x=>x.d&&allDays.add(dkey(x.d)))); t.daysSpan=allDays.size;
+  const te={}; list.forEach(r=>r.tasks.forEach(([k,v])=>{te[k]=te[k]||{est:0,act:0};te[k].est+=v.est;te[k].act+=v.act;}));
+  t.taskEff={}; Object.entries(te).forEach(([k,v])=>{if(v.act>0)t.taskEff[k]=v.est/v.act;});
+  return t;
+}
+function computeTeam(list){
+  const T=teamAgg(list);
+  T.prev=PERIOD&&PERIOD.compare?teamAgg(list.map(r=>r.prev).filter(Boolean)):null;
+  window.TEAM=T;
   const min=+$("#setMin").value||1;
   results.forEach(r=>{r.rank=null;});
   const ranked=list.filter(r=>r.score!=null&&r.entries>=min).sort((a,b)=>b.score-a.score);
@@ -527,55 +715,145 @@ function computeTeam(list){
 }
 function applyScope(){scope=results.filter(inScope); computeTeam(scope); render();}
 
-/* ================= Rendering ================= */
-function effPill(e){if(e==null)return '<span class="pill n">—</span>';const t=(+$("#setTarget").value||100)/100;const c=e>=t?"g":e>=t*0.85?"w":"b";return `<span class="pill ${c}">${pct(e)}</span>`;}
-function barCls(e){const t=(+$("#setTarget").value||100)/100;return e>=t?"gb":e>=t*0.85?"wb":"bb";}
-function scorePill(s){if(s==null)return '<span class="pill n">—</span>';const c=s>=85?"g":s>=70?"w":"b";return `<span class="pill ${c}">${fmt(s,0)}</span>`;}
-function ratePill(v,goodHigh=true,gT=.9,wT=.75){if(v==null)return "—";let c;if(goodHigh)c=v>=gT?"g":v>=wT?"w":"b";else c=v<=gT?"g":v<=wT?"w":"b";return `<span class="pill ${c}">${pct(v)}</span>`;}
+/* ================= Merge suggestions ================= */
+const NICK=[["mike","michael","mick","mikey"],["dave","david"],["jim","jimmy","james","jamie"],["bob","rob","robert","bobby","robby","robbie"],["bill","will","william","billy","willie"],["tom","thomas","tommy"],["chris","christopher"],["matt","matthew"],["dan","daniel","danny"],["joe","joseph","joey"],["steve","steven","stephen"],["nick","nicholas"],["tony","anthony"],["ben","benjamin"],["sam","samuel"],["alex","alexander"],["andy","andrew","drew"],["greg","gregory"],["jeff","jeffrey"],["ken","kenneth","kenny"],["ron","ronald"],["rick","richard","rich","ricky"],["liz","elizabeth","beth"],["kate","katherine","kathy","katie"],["jen","jennifer","jenny"],["sue","susan"],["pat","patrick","patricia"],["jon","john","jonathan","johnny"],["ed","edward","eddie"],["tim","timothy"],["jake","jacob"],["josh","joshua"],["zach","zachary"],["ray","raymond"],["larry","lawrence"],["jerry","gerald"],["don","donald"],["doug","douglas"],["phil","phillip","philip"],["fred","frederick"],["frank","francis"],["vince","vincent"],["pete","peter"],["al","albert","alan","allen"],["gabe","gabriel"],["nate","nathan","nathaniel"],["manny","manuel"],["jose","pepe"]];
+const nickOf=w=>NICK.findIndex(g=>g.includes(w));
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,i)=>i);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+const toks=s=>s.toLowerCase().replace(/[^a-z\s]/g," ").split(/\s+/).filter(Boolean);
+function firstSame(a,b){
+  if(a===b) return "same first name";
+  if((a.length===1||b.length===1)&&a[0]===b[0]) return "initial matches";
+  const na=nickOf(a); if(na>=0&&na===nickOf(b)) return "nickname";
+  if(Math.min(a.length,b.length)>=3&&(a.startsWith(b)||b.startsWith(a))) return "short form";
+  return "";
+}
+function likelySame(A,B){
+  const a=toks(A),b=toks(B); if(!a.length||!b.length) return "";
+  if(a.length>=2&&b.length>=2){
+    const la=a[a.length-1],lb=b[b.length-1];
+    const lastOk=la===lb||(Math.min(la.length,lb.length)>=5&&lev(la,lb)<=1);
+    if(lastOk){const why=firstSame(a[0],b[0]); if(why) return la===lb?`same last name, ${why}`:`similar last name, ${why}`;}
+  }
+  if((a.length===1)!==(b.length===1)){const one=a.length===1?a[0]:b[0], full=a.length===1?b:a; const w=firstSame(one,full[0]); if(w&&one.length>1) return `first name only (${w})`;}
+  const x=a.join(" "),y=b.join(" ");
+  if(Math.min(x.length,y.length)>=6&&x[0]===y[0]&&lev(x,y)<=2) return "similar spelling";
+  return "";
+}
+function pairKey(a,b){return [a,b].sort().join("||");}
+function findSuggestions(){
+  const names=[...ALL.keys()], out=[];
+  for(let i=0;i<names.length;i++)for(let j=i+1;j<names.length;j++){
+    const A=names[i],B=names[j]; if(people.notSame.includes(pairKey(A,B))) continue;
+    const why=likelySame(A,B); if(why) out.push({a:A,b:B,why});
+  }
+  // a single first name matching several people is ambiguous: drop those
+  const single=out.filter(p=>p.why.startsWith("first name only"));
+  return out.filter(p=>!p.why.startsWith("first name only")||single.filter(q=>q.a===p.a||q.b===p.a||q.a===p.b||q.b===p.b).length===1).slice(0,8);
+}
+function renameTo(from,to){
+  to=to.replace(/\s+/g," ").trim(); if(!to||to===from) return;
+  const e=ALL.get(from); if(!e) return;
+  e.raws.forEach(raw=>people.aliases[raw]=to);
+  Object.keys(people.aliases).forEach(k=>{if(people.aliases[k]===from) people.aliases[k]=to;});
+  if(people.groups[from]!==undefined&&people.groups[to]===undefined) people.groups[to]=people.groups[from];
+  delete people.groups[from];
+  if(people.notes[from]){people.notes[to]=[people.notes[to],people.notes[from]].filter(Boolean).join("\n\n");delete people.notes[from];}
+  Object.keys(people.aliases).forEach(k=>{if(k===people.aliases[k]) delete people.aliases[k];});
+}
+function mergePair(a,b){
+  const ra=ALL.get(a).rows.length, rb=ALL.get(b).rows.length;
+  const [keep,drop]=(rb>ra||(rb===ra&&b.length>a.length))?[b,a]:[a,b];
+  renameTo(drop,keep); savePeople(); compute(); toast(`Merged ${drop} into ${keep}`);
+}
+function renderSuggestions(){
+  const sg=findSuggestions(); const box=$("#suggestBox");
+  if(!sg.length){box.innerHTML="";return;}
+  box.innerHTML=`<div class="suggest"><div style="font-weight:650;margin-bottom:4px">💡 Possible duplicate names</div>${sg.map((p,i)=>`<div class="s-row"><span><b>${esc(p.a)}</b> <span class="hint">(${ALL.get(p.a).rows.length} rows)</span> ↔ <b>${esc(p.b)}</b> <span class="hint">(${ALL.get(p.b).rows.length} rows)</span></span><span class="hint">${esc(p.why)}</span><span style="flex:1"></span><button class="btn sm primary" data-m="${i}">Merge</button><button class="btn sm" data-x="${i}">Not the same</button></div>`).join("")}</div>`;
+  box.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{const p=sg[+b.dataset.m];mergePair(p.a,p.b);});
+  box.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{const p=sg[+b.dataset.x];people.notSame.push(pairKey(p.a,p.b));savePeople();renderSuggestions();});
+}
 
-function columns(){
-  const M=window.EFFMAP||mapping, any=k=>results.some(r=>r[k]!=null);
-  const cols=[
-    {k:"name",l:"Employee",f:r=>`<span class="name-link" data-n="${esc(r.name)}">${esc(r.name)}</span>`},
-    {k:"group",l:"Group",f:r=>r.group?esc(r.group):'<span class="hint">—</span>',show:results.some(r=>r.group)},
-    {k:"score",l:"Score",f:r=>scorePill(r.score),show:any("score")},
-    {k:"rank",l:"Rank",f:r=>r.rank?`${r.rank} / ${r.of}`:"—",show:any("score")},
-    {k:"hours",l:"Hours",f:r=>fmt(r.hours)},
-    {k:"days",l:"Days",f:r=>r.days??"—",show:any("days")},
-    {k:"avgDay",l:"Hrs / day",f:r=>fmt(r.avgDay),show:any("avgDay")},
-    {k:"jobs",l:"Jobs",f:r=>r.jobs??"—",show:!!M.job},
-    {k:"hrsPerJob",l:"Hrs / job",f:r=>fmt(r.hrsPerJob),show:!!M.job},
-    {k:"eff",l:"Efficiency",f:r=>r.eff==null?effPill(null):`<div class="effcell"><div class="bar"><i class="${barCls(r.eff)}" style="width:${Math.min(r.eff/1.5,1)*100}%"></i></div>${effPill(r.eff)}</div>`,show:any("eff")},
-    {k:"onBudget",l:"On budget",f:r=>pct(r.onBudget),show:any("onBudget")},
-    {k:"compRate",l:"Completion",f:r=>ratePill(r.compRate),show:any("compRate")},
-    {k:"callbacks",l:"Callbacks",f:r=>r.callbacks??"—",show:!!M.callback},
-    {k:"cbRate",l:"Callback rate",f:r=>ratePill(r.cbRate,false,.03,.08),show:!!M.callback},
-    {k:"inspPass",l:"Insp. pass",f:r=>ratePill(r.inspPass),show:any("inspPass")},
-    {k:"util",l:"Billable %",f:r=>ratePill(r.util,true,.8,.65),show:any("util")},
-    {k:"ot",l:"OT hrs",f:r=>fmt(r.ot),show:any("ot")},
-    {k:"rev",l:"Revenue",f:r=>money(r.rev),show:!!M.revenue},
-    {k:"revPerHr",l:"$ / hr",f:r=>money(r.revPerHr),show:!!M.revenue},
-    {k:"safety",l:"Safety inc.",f:r=>r.safety??"—",show:!!M.safety},
-  ];
-  return cols.filter(c=>c.show!==false);
+/* ================= Rendering ================= */
+function effPill(e){if(e==null)return '<span class="pill n">—</span>';const t=target();const c=e>=t?"g":e>=t*0.85?"w":"b";return `<span class="pill ${c}">${pct(e)}</span>`;}
+function barCls(e){const t=target();return e>=t?"gb":e>=t*0.85?"wb":"bb";}
+function scorePill(s,name){if(s==null)return '<span class="pill n">—</span>';const c=s>=85?"g":s>=70?"w":"b";return `<span class="pill ${c}" data-score="${esc(name)}" tabindex="0">${fmt(s,0)}</span>`;}
+function ratePill(v,goodHigh=true,gT=.9,wT=.75){if(v==null)return "—";let c;if(goodHigh)c=v>=gT?"g":v>=wT?"w":"b";else c=v<=gT?"g":v<=wT?"w":"b";return `<span class="pill ${c}">${pct(v)}</span>`;}
+function delta(cur,prev,{p=true,up=true,d=1,neutral=false}={}){
+  if(prev===undefined) return "";
+  if(cur==null||prev==null) return prev==null&&cur!=null?'<span class="dl new">new</span>':"";
+  const diff=p?(cur-prev)*100:cur-prev;
+  if(Math.abs(diff)<(p?0.5:0.05)) return '<span class="dl eq">= prev</span>';
+  const good=up?diff>0:diff<0;
+  return `<span class="dl ${neutral?"eq":good?"up":"dn"}">${diff>0?"▲":"▼"} ${fmt(Math.abs(diff),p?0:d)}${p?" pts":""}</span>`;
+}
+
+const COLS=[
+  {k:"name",l:"Employee",f:r=>`<button class="name-link" data-n="${esc(r.name)}">${esc(r.name)}</button>`},
+  {k:"group",l:"Group",f:r=>r.group?esc(r.group):'<span class="hint">—</span>',show:()=>results.some(r=>r.group)},
+  {k:"score",l:"Score",f:r=>scorePill(r.score,r.name),has:"score",dk:{p:false,d:0}},
+  {k:"rank",l:"Rank",f:r=>r.rank?`${r.rank} / ${r.of}`:'<span class="hint" title="Not enough records to rank">—</span>',has:"score"},
+  {k:"hours",l:"Hours",f:r=>fmt(r.hours),dk:{p:false,neutral:true}},
+  {k:"days",l:"Days",f:r=>r.days??"—",has:"days"},
+  {k:"avgDay",l:"Hrs / day",f:r=>fmt(r.avgDay),has:"avgDay"},
+  {k:"jobs",l:"Jobs",f:r=>r.jobs??"—",has:"jobs",dk:{p:false,d:0,neutral:true}},
+  {k:"hrsPerJob",l:"Hrs / job",f:r=>fmt(r.hrsPerJob),has:"hrsPerJob",dk:{p:false,up:false}},
+  {k:"eff",l:"Efficiency",f:r=>r.eff==null?effPill(null):`<div class="effcell"><div class="bar"><i class="${barCls(r.eff)}" style="width:${Math.min(r.eff/1.5,1)*100}%"></i></div>${effPill(r.eff)}</div>`,has:"eff",dk:{}},
+  {k:"onBudget",l:"On budget",f:r=>pct(r.onBudget),has:"onBudget",dk:{}},
+  {k:"compRate",l:"Completion",f:r=>ratePill(r.compRate),has:"compRate",dk:{}},
+  {k:"callbacks",l:"Callbacks",f:r=>r.callbacks??"—",has:"callbacks",dk:{p:false,up:false,d:0}},
+  {k:"cbRate",l:"Callback rate",f:r=>ratePill(r.cbRate,false,.03,.08),has:"cbRate",dk:{up:false}},
+  {k:"inspPass",l:"Insp. pass",f:r=>ratePill(r.inspPass),has:"inspPass",dk:{}},
+  {k:"safety",l:"Safety inc.",f:r=>r.safety??"—",has:"safety",dk:{p:false,up:false,d:0}},
+  {k:"billH",l:"Billable hrs",f:r=>fmt(r.billH),has:"billH"},
+  {k:"util",l:"Billable %",f:r=>ratePill(r.util,true,.8,.65),has:"util",dk:{}},
+  {k:"ot",l:"OT hrs",f:r=>fmt(r.ot),has:"ot",dk:{p:false,up:false}},
+  {k:"rev",l:"Revenue",f:r=>money(r.rev),has:"rev",dk:{p:false,d:0}},
+  {k:"revPerHr",l:"$ / hr",f:r=>money(r.revPerHr),has:"revPerHr",dk:{p:false,d:0}},
+];
+const VIEWS={
+  overview:{l:"Overview",c:["name","group","score","rank","hours","jobs","eff","compRate","cbRate","ot"]},
+  productivity:{l:"Productivity",c:["name","group","hours","days","avgDay","jobs","hrsPerJob","eff","onBudget","ot"]},
+  quality:{l:"Quality",c:["name","group","score","rank","compRate","callbacks","cbRate","inspPass","safety"]},
+  money:{l:"Money",c:["name","group","hours","billH","util","rev","revPerHr"]},
+  all:{l:"All columns",c:COLS.map(c=>c.k)},
+};
+const colAvail=c=>c.show?c.show():c.has?results.some(r=>r[c.has]!=null):true;
+function viewCols(v){return VIEWS[v].c.map(k=>COLS.find(c=>c.k===k)).filter(colAvail);}
+function renderViews(){
+  const ok=Object.keys(VIEWS).filter(v=>v==="overview"||v==="all"||viewCols(v).filter(c=>!["name","group","hours"].includes(c.k)).length>0);
+  if(!ok.includes(VIEW)) VIEW="overview";
+  $("#viewSeg").innerHTML=ok.map(v=>`<button data-v="${v}" class="${v===VIEW?"on":""}">${VIEWS[v].l}</button>`).join("");
+  $("#viewSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{VIEW=b.dataset.v;store.set("view",VIEW);render();});
+}
+
+function kpiTiles(){
+  const T=window.TEAM, P=T.prev, out=[];
+  const d=(k,o)=>P?delta(T[k],P[k],o):"";
+  if(T.effAll!=null) out.push(["Team efficiency",pct(T.effAll),`target ${pct(target())} ${d("effAll",{})}`]);
+  if(T.cbAll!=null) out.push(["Callback rate",pct(T.cbAll,1),`${T.callbacks} callback${T.callbacks===1?"":"s"} ${d("cbAll",{up:false})}`]);
+  else if(T.compAll!=null) out.push(["Completion",pct(T.compAll),`of jobs closed ${d("compAll",{})}`]);
+  out.push(["Total hours",fmt(T.totHours,0),`${T.n} ${T.n===1?"person":"people"}${T.daysSpan?` · ${T.daysSpan} days`:""} ${d("totHours",{p:false,d:0,neutral:true})}`]);
+  if(T.otTot!=null) out.push(["Overtime hours",fmt(T.otTot,0),`${fmt(T.ot)} avg / person ${d("otTot",{p:false,up:false,d:0})}`]);
+  const extra=[];
+  if(T.compAll!=null&&!out.some(o=>o[0]==="Completion")) extra.push(["Completion",pct(T.compAll),`of jobs closed ${d("compAll",{})}`]);
+  if(T.utilAll!=null) extra.push(["Billable",pct(T.utilAll),`of hours billed ${d("utilAll",{})}`]);
+  if(T.score!=null) extra.push(["Avg score",fmt(T.score,0),`out of 100 ${d("score",{p:false,d:0})}`]);
+  extra.push(["Employees",T.n,""]);
+  while(out.length<4&&extra.length) out.push(extra.shift());
+  return out.slice(0,4);
 }
 
 function render(){
-  const T=window.TEAM, M=window.EFFMAP||mapping;
+  const M=window.EFFMAP||mapping;
   if(!M.employee&&!M.first&&!M.last){
-    $("#teamKpis").innerHTML=`<div class="kpi" style="grid-column:1/-1"><div class="v" style="color:var(--bad)">Pick the Employee name column above</div><div class="l">It couldn't be matched automatically.</div></div>`;
-    $("#teamTable thead").innerHTML="";$("#teamTable tbody").innerHTML="";return;
+    $("#teamKpis").innerHTML=`<div class="kpi" style="grid-column:1/-1"><div class="v" style="color:var(--bad);font-size:20px">Pick the Employee name column in Columns &amp; settings</div><div class="s">It couldn't be matched automatically.</div></div>`;
+    $("#teamTable thead").innerHTML="";$("#teamTable tbody").innerHTML="";$("#cards").innerHTML="";return;
   }
-  const gv=$("#groupSel").value;
-  const k=[[gv&&gv!=="__all"?`Employees in ${gv||"(No group)"}`:"Employees",scope.length],["Total hours",fmt(T.totHours)]];
-  if(T.effAll!=null) k.push(["Team efficiency",pct(T.effAll)]);
-  if(T.compRate!=null) k.push(["Avg completion",pct(T.compRate)]);
-  if(T.cbRate!=null) k.push(["Avg callback rate",pct(T.cbRate,1)]);
-  if(T.util!=null) k.push(["Avg billable",pct(T.util)]);
-  if(T.ot!=null) k.push(["Avg OT hrs / person",fmt(T.ot)]);
-  if(T.score!=null) k.push(["Avg score",fmt(T.score,0)]);
-  $("#teamKpis").innerHTML=k.map(([l,v])=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
-  const cols=columns();
+  if(!scope.length){ $("#teamKpis").innerHTML=`<div class="kpi" style="grid-column:1/-1"><div class="v" style="font-size:18px">No records in this period</div><div class="s">Choose a different period above.</div></div>`; $("#teamTable thead").innerHTML="";$("#teamTable tbody").innerHTML="";$("#cards").innerHTML="";return; }
+  $("#teamKpis").innerHTML=kpiTiles().map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+  renderViews();
+  const cols=viewCols(VIEW); const cmpOn=PERIOD&&PERIOD.compare;
+  if(!cols.some(c=>c.k===sortKey)) sortKey=cols.some(c=>c.k==="score")?"score":"hours";
   const q=$("#search").value.trim().toLowerCase();
   const sorted=[...scope].filter(r=>!q||r.name.toLowerCase().includes(q)||(r.group||"").toLowerCase().includes(q)).sort((a,b)=>{
     let x=a[sortKey],y=b[sortKey];
@@ -584,154 +862,255 @@ function render(){
     if(sortKey==="rank"){x=x??1e9;y=y??1e9;return sortAsc?y-x:x-y;}
     x=x??-Infinity;y=y??-Infinity;return sortAsc?x-y:y-x;
   });
-  $("#teamTable thead").innerHTML="<tr>"+cols.map(c=>`<th data-k="${c.k}" class="${c.k===sortKey?"sorted"+(sortAsc?" asc":""):""}">${c.l}</th>`).join("")+"</tr>";
   shownList=sorted;
+  const cell=(c,r)=>c.f(r)+(cmpOn&&c.dk?delta(r[c.k],r.prev?r.prev[c.k]:null,c.dk):"");
+  $("#teamTable thead").innerHTML="<tr>"+cols.map(c=>`<th data-k="${c.k}" class="${c.k===sortKey?"sorted"+(sortAsc?" asc":""):""}">${c.l}</th>`).join("")+"</tr>";
   $("#shownCount").textContent=q?`${sorted.length} of ${scope.length} shown`:"";
-  $("#teamTable tbody").innerHTML=sorted.length?"":`<tr><td colspan="${cols.length}" class="empty">No employees match.</td></tr>`;
-  if(sorted.length) $("#teamTable tbody").innerHTML=sorted.map(r=>"<tr>"+cols.map(c=>`<td>${c.f(r)}</td>`).join("")+"</tr>").join("");
+  $("#teamTable tbody").innerHTML=sorted.length?sorted.map(r=>"<tr>"+cols.map(c=>`<td>${cell(c,r)}</td>`).join("")+"</tr>").join(""):`<tr><td colspan="${cols.length}" class="empty">No employees match.</td></tr>`;
   $("#teamTable thead").querySelectorAll("th").forEach(th=>th.onclick=()=>{const kk=th.dataset.k;if(sortKey===kk)sortAsc=!sortAsc;else{sortKey=kk;sortAsc=kk==="name"||kk==="group";}render();});
-  $("#teamTable tbody").querySelectorAll(".name-link").forEach(a=>a.onclick=()=>openReport(a.dataset.n));
+  // cards (mobile)
+  const mcols=cols.filter(c=>!["name","group","score","rank"].includes(c.k)).slice(0,6);
+  $("#cards").innerHTML=sorted.length?sorted.map(r=>`<div class="card"><div class="top"><div><button class="name-link" data-n="${esc(r.name)}">${esc(r.name)}</button><div class="grp">${r.group?esc(r.group)+" · ":""}${r.rank?`Rank ${r.rank} of ${r.of}`:`${r.entries} records`}</div></div>${colAvail(COLS[2])?scorePill(r.score,r.name):""}</div><div class="mgrid">${mcols.map(c=>`<div class="m"><div class="ml">${c.l}</div><div class="mv">${cell(c,r)}</div></div>`).join("")}</div></div>`).join(""):`<div class="empty">No employees match.</div>`;
+  document.querySelectorAll("#teamTable .name-link,#cards .name-link").forEach(a=>a.onclick=()=>openReport(a.dataset.n));
 }
 
+/* ================= Score tooltip ================= */
+function breakdownRows(s){
+  return s.scoreParts.map(p=>`<tr><td>${p.label}</td><td>${esc(p.detail)}</td><td style="text-align:right;white-space:nowrap"><b>${fmt(p.pts,0)}</b> / ${fmt(p.max,0)}</td></tr>`).join("")+`<tr class="tot"><td>Score</td><td></td><td style="text-align:right"><b>${fmt(s.score,0)}</b> / 100</td></tr>`;
+}
+const tip=$("#tip");
+function showTip(el){
+  const s=results.find(r=>r.name===el.dataset.score); if(!s||!s.scoreParts.length) return;
+  tip.innerHTML=`<div style="font-weight:650;margin-bottom:4px">How ${esc(s.name)}'s score is made</div><table>${breakdownRows(s)}</table><div class="hint" style="margin-top:4px">Only metrics in your data are used; weights re-balance to 100.</div>`;
+  tip.classList.remove("hidden");
+  const b=el.getBoundingClientRect(), w=tip.offsetWidth, h=tip.offsetHeight;
+  let x=Math.min(Math.max(8,b.left+b.width/2-w/2),innerWidth-w-8), y=b.bottom+8; if(y+h>innerHeight-8) y=b.top-h-8;
+  tip.style.left=x+"px"; tip.style.top=y+"px";
+}
+document.addEventListener("mouseover",e=>{const el=e.target.closest&&e.target.closest("[data-score]"); if(el) showTip(el);});
+document.addEventListener("mouseout",e=>{if(e.target.closest&&e.target.closest("[data-score]")) tip.classList.add("hidden");});
+document.addEventListener("click",e=>{const el=e.target.closest&&e.target.closest("[data-score]"); if(el){e.stopPropagation();showTip(el);} else tip.classList.add("hidden");},true);
+document.addEventListener("focusin",e=>{if(e.target.dataset&&e.target.dataset.score) showTip(e.target);});
+document.addEventListener("focusout",()=>tip.classList.add("hidden"));
+addEventListener("scroll",()=>tip.classList.add("hidden"),true);
+
+/* ================= Charts ================= */
+function weeklyChart(s){
+  if(s.weekly.length<2) return "";
+  const W=440,H=170,pl=34,pr=8,pt=12,pb=26, std=+$("#setWeek").value||40;
+  const max=Math.max(std*1.15,...s.weekly.map(w=>w[1]))*1.05;
+  const iw=W-pl-pr, ih=H-pt-pb, n=s.weekly.length, bw=Math.min(34,iw/n-6);
+  const y=v=>pt+ih-v/max*ih;
+  const ticks=[0,Math.round(max/2/5)*5,Math.round(max*0.9/5)*5].filter((v,i,a)=>a.indexOf(v)===i);
+  let g=ticks.map(t=>`<line class="gridl" x1="${pl}" x2="${W-pr}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${pl-5}" y="${y(t)+3.5}" text-anchor="end">${t}</text>`).join("");
+  const lo=PERIOD&&!PERIOD.all?PERIOD.from:s.from, hi=PERIOD&&!PERIOD.all?PERIOD.to:s.to;
+  g+=s.weekly.map(([k,h],i)=>{const ws=fromKey(k), part=(lo&&lo>ws)||(hi&&hi<addDays(ws,4)); const cx=pl+iw*(i+.5)/n, top=y(h), x=cx-bw/2, r=Math.min(4,bw/2), hh=Math.max(0,pt+ih-top);
+    const path=hh>r?`M${x},${pt+ih}V${top+r}Q${x},${top} ${x+r},${top}H${x+bw-r}Q${x+bw},${top} ${x+bw},${top+r}V${pt+ih}Z`:`M${x},${pt+ih}h${bw}v${-hh}h${-bw}Z`;
+    const lab=(n<=8||i%Math.ceil(n/8)===0)?`<text class="ax" x="${cx}" y="${H-8}" text-anchor="middle">${shortDate(fromKey(k))}</text>`:"";
+    return `<path class="barm${part?" part":""}" d="${path}"><title>Week of ${shortDate(fromKey(k))}: ${fmt(h)} hrs${part?" (partial week)":""}</title></path>${lab}`;}).join("");
+  const anyPart=g.includes("barm part");
+  g+=`<line class="ref" x1="${pl}" x2="${W-pr}" y1="${y(std)}" y2="${y(std)}"/>`;
+  return `<div class="chart"><h4>Hours per week</h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hours per week">${g}</svg><div class="legend"><span><i style="background:transparent;border-top:2px dashed var(--muted);height:0;width:14px;border-radius:0"></i>${std} h standard week</span>${anyPart?`<span><i style="background:var(--accent);opacity:.4"></i>Partial week</span>`:""}</div></div>`;
+}
+function taskChart(s){
+  const T=window.TEAM; const rows=s.tasks.filter(([k,t])=>t.act>0&&k!=="(unspecified)").slice(0,8);
+  if(rows.length<2) return "";
+  const W=440,rh=24,pl=118,pr=46,pt=6,H=pt+rows.length*rh+22, tg=target();
+  const max=Math.max(1.5,tg*1.3,...rows.map(([k,t])=>Math.max(t.est/t.act,T.taskEff[k]||0)))*1.02;
+  const iw=W-pl-pr, x=v=>pl+v/max*iw;
+  let g=`<line class="ref" x1="${x(tg)}" x2="${x(tg)}" y1="${pt}" y2="${H-18}"/><text class="ax" x="${x(tg)}" y="${H-5}" text-anchor="middle">target ${pct(tg)}</text>`;
+  g+=rows.map(([k,t],i)=>{const e=t.est/t.act, te=T.taskEff[k], cy=pt+i*rh+rh/2, bh=10, w=Math.max(0,x(e)-pl), r=Math.min(4,w/2);
+    const path=w>r*2?`M${pl},${cy-bh/2}H${pl+w-r}Q${pl+w},${cy-bh/2} ${pl+w},${cy-bh/2+r}V${cy+bh/2-r}Q${pl+w},${cy+bh/2} ${pl+w-r},${cy+bh/2}H${pl}Z`:`M${pl},${cy-bh/2}h${w}v${bh}h${-w}Z`;
+    const lbl=k.length>17?k.slice(0,16)+"…":k;
+    return `<text class="lbl" x="${pl-8}" y="${cy+4}" text-anchor="end">${esc(lbl)}<title>${esc(k)}</title></text><path class="barm" d="${path}"><title>${esc(k)}: ${pct(e)} (${t.n} entries) · team ${pct(te)}</title></path>${te!=null?`<rect class="teamm" x="${x(te)-1.5}" y="${cy-9}" width="3" height="18" rx="1"><title>Team average for ${esc(k)}: ${pct(te)}</title></rect>`:""}<text class="lbl" x="${Math.max(x(e),te!=null?x(te):0)+8}" y="${cy+4}">${pct(e)}</text>`;}).join("");
+  return `<div class="chart"><h4>Efficiency by task vs team</h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Efficiency by task">${g}</svg><div class="legend"><span><i style="background:var(--accent)"></i>${esc(s.name.split(" ")[0])}</span><span><i style="background:var(--ink);width:3px"></i>Team average</span></div></div>`;
+}
+
+/* ================= Report ================= */
 function cmp(v,t,higherBetter=true,isPct=true){
   if(v==null||t==null) return "";
   const d=v-t; if(Math.abs(d)<1e-9) return '<span class="hint">= team avg</span>';
-  const good=higherBetter?d>0:d<0;
+  const good=higherBetter===null?null:higherBetter?d>0:d<0;
   const txt=isPct?(d>0?"+":"")+fmt(d*100,0)+" pts":(d>0?"+":"")+fmt(d);
-  return `<span style="color:${good?"var(--good)":"var(--bad)"};font-weight:600">${txt}</span> <span class="hint">vs team</span>`;
+  return `<span style="color:${good===null?"var(--muted)":good?"var(--good)":"var(--bad)"};font-weight:600">${txt}</span> <span class="hint">vs team</span>`;
 }
-
 function notesFor(s){
-  const T=window.TEAM, n=[], target=(+$("#setTarget").value||100)/100;
-  const strengths=[],improve=[];
-  if(s.eff!=null){ if(s.eff>=target) strengths.push(`Finishes work at ${pct(s.eff)} of estimate — beats target ${pct(target)}.`); else improve.push(`Efficiency is ${pct(s.eff)} vs target ${pct(target)} (${fmt(Math.abs(s.hoursVar))} hrs over estimate across ${s.effRows} entries).`); }
-  if(s.compRate!=null){ if(s.compRate>=.9) strengths.push(`High completion rate (${pct(s.compRate)}).`); else if(s.compRate<.75) improve.push(`Completion rate is ${pct(s.compRate)} — review open / pending jobs.`); }
-  if(s.cbRate!=null){ if(s.callbacks===0) strengths.push(`No callbacks or rework recorded.`); else if(T.cbRate!=null&&s.cbRate>T.cbRate) improve.push(`${s.callbacks} callback(s) — rate ${pct(s.cbRate,1)} is above team average ${pct(T.cbRate,1)}.`); }
-  if(s.inspPass!=null){ if(s.inspPass>=.95) strengths.push(`Inspection pass rate ${pct(s.inspPass)}.`); else if(s.inspPass<.85) improve.push(`Inspection pass rate ${pct(s.inspPass)} — check for recurring code issues.`); }
-  if(s.util!=null){ if(s.util>=.8) strengths.push(`Strong billable utilization (${pct(s.util)}).`); else if(s.util<.65) improve.push(`Billable utilization is ${pct(s.util)} — look at drive time, shop time, waiting on materials.`); }
-  if(s.ot!=null&&s.ot>0&&T.ot!=null&&s.ot>T.ot*1.5&&s.ot>4) improve.push(`${fmt(s.ot)} overtime hours — well above team average (${fmt(T.ot)}). Check workload balance.`);
+  const T=window.TEAM, tg=target(), strengths=[],improve=[];
+  if(s.eff!=null){ if(s.eff>=tg) strengths.push(`Finishes work at ${pct(s.eff)} of estimate, above the ${pct(tg)} target.`); else improve.push(`Efficiency is ${pct(s.eff)} vs target ${pct(tg)} (${fmt(Math.abs(s.hoursVar))} hrs over estimate across ${s.effRows} entries).`); }
+  if(s.compRate!=null){ if(s.compRate>=.9) strengths.push(`High completion rate (${pct(s.compRate)}).`); else if(s.compRate<.75) improve.push(`Completion rate is ${pct(s.compRate)}. Review open or pending jobs.`); }
+  if(s.cbRate!=null){ if(s.callbacks===0) strengths.push(`No callbacks or rework recorded.`); else if(T.cbRate!=null&&s.cbRate>T.cbRate) improve.push(`${s.callbacks} callback(s): rate ${pct(s.cbRate,1)} is above team average ${pct(T.cbRate,1)}.`); }
+  if(s.inspPass!=null){ if(s.inspPass>=.95) strengths.push(`Inspection pass rate ${pct(s.inspPass)}.`); else if(s.inspPass<.85) improve.push(`Inspection pass rate ${pct(s.inspPass)}. Check for recurring code issues.`); }
+  if(s.util!=null){ if(s.util>=.8) strengths.push(`Strong billable utilization (${pct(s.util)}).`); else if(s.util<.65) improve.push(`Billable utilization is ${pct(s.util)}. Look at drive time, shop time and waiting on materials.`); }
+  if(s.ot!=null&&s.ot>0&&T.ot!=null&&s.ot>T.ot*1.5&&s.ot>4) improve.push(`${fmt(s.ot)} overtime hours, well above team average (${fmt(T.ot)}). Check workload balance.`);
   if(s.safety) improve.push(`${s.safety} safety incident(s) recorded.`);
+  if(s.prev){
+    if(s.eff!=null&&s.prev.eff!=null){const d=(s.eff-s.prev.eff)*100; if(d>=5) strengths.push(`Efficiency up ${fmt(d,0)} pts on the previous period.`); else if(d<=-5) improve.push(`Efficiency down ${fmt(-d,0)} pts on the previous period.`);}
+    if(s.cbRate!=null&&s.prev.cbRate!=null){const d=(s.cbRate-s.prev.cbRate)*100; if(d<=-2) strengths.push(`Callback rate improved by ${fmt(-d,1)} pts.`); else if(d>=2) improve.push(`Callback rate rose ${fmt(d,1)} pts on the previous period.`);}
+  }
   if(s.tasks.length>1){
     const withEff=s.tasks.filter(([,t])=>t.act>0&&t.n>=2).map(([k,t])=>[k,t.est/t.act]);
-    if(withEff.length>1){withEff.sort((a,b)=>b[1]-a[1]);strengths.push(`Most efficient at: ${withEff[0][0]} (${pct(withEff[0][1])}).`);if(withEff[withEff.length-1][1]<target)improve.push(`Slowest vs estimate on: ${withEff[withEff.length-1][0]} (${pct(withEff[withEff.length-1][1])}).`);}
+    if(withEff.length>1){withEff.sort((a,b)=>b[1]-a[1]);strengths.push(`Most efficient at: ${withEff[0][0]} (${pct(withEff[0][1])}).`);if(withEff[withEff.length-1][1]<tg)improve.push(`Slowest vs estimate on: ${withEff[withEff.length-1][0]} (${pct(withEff[withEff.length-1][1])}).`);}
   }
   return {strengths,improve};
 }
-
-function reportHTML(s){
-  const T=window.TEAM, M=window.EFFMAP||mapping;
-  const range=s.from?`${s.from.toLocaleDateString()} – ${s.to.toLocaleDateString()}`:"All records";
-  const rows=[];
-  const add=(l,v,c="")=>rows.push(`<tr><td>${l}</td><td>${v}</td><td>${c}</td></tr>`);
-  add("Total hours",fmt(s.hours),cmp(s.hours,T.hours,true,false));
-  if(s.days!=null) add("Days worked",s.days,"");
-  if(s.avgDay!=null) add("Avg hours / day",fmt(s.avgDay),cmp(s.avgDay,T.avgDay,true,false));
-  if(s.jobs!=null) add("Jobs / work orders",s.jobs,"");
-  if(s.hrsPerJob!=null) add("Avg hours / job",fmt(s.hrsPerJob),cmp(s.hrsPerJob,T.hrsPerJob,false,false));
-  if(s.ot!=null) add("Overtime hours",fmt(s.ot),cmp(s.ot,T.ot,false,false));
-  if(s.billH!=null) add("Billable hours",fmt(s.billH),"");
-  if(s.rev!=null) add("Revenue",money(s.rev),"");
-  if(s.revPerHr!=null) add("Revenue / hour",money(s.revPerHr),"");
-  const perf=[];
-  const addp=(l,v,c="")=>perf.push(`<tr><td>${l}</td><td>${v}</td><td>${c}</td></tr>`);
-  if(s.eff!=null){addp("Efficiency (est ÷ actual)",effPill(s.eff),cmp(s.eff,T.eff));addp("Estimated vs actual hrs",`${fmt(s.estH)} / ${fmt(s.actH)}`,"");addp("Jobs at/under estimate",pct(s.onBudget),cmp(s.onBudget,T.onBudget));}
-  if(s.compRate!=null) addp("Completion rate",ratePill(s.compRate),cmp(s.compRate,T.compRate));
-  if(s.callbacks!=null){addp("Callbacks / rework",s.callbacks,"");addp("Callback rate",ratePill(s.cbRate,false,.03,.08),cmp(s.cbRate,T.cbRate,false));}
-  if(s.inspPass!=null) addp("Inspection pass rate",ratePill(s.inspPass),cmp(s.inspPass,T.inspPass));
-  if(s.util!=null) addp("Billable utilization",ratePill(s.util,true,.8,.65),cmp(s.util,T.util));
-  if(s.safety!=null) addp("Safety incidents",s.safety,"");
+function periodText(){
+  if(!PERIOD||PERIOD.all) return "";
+  const l=d=>d.toLocaleDateString();
+  return `${l(PERIOD.from)} – ${l(PERIOD.to)}`+(PERIOD.compare?` (compared with ${l(PERIOD.pf)} – ${l(PERIOD.pt)})`:"");
+}
+function reportHTML(s,live=false){
+  const T=window.TEAM, M=window.EFFMAP||mapping, P=s.prev, cmpOn=PERIOD&&PERIOD.compare;
+  const range=periodText()||(s.from?`${s.from.toLocaleDateString()} – ${s.to.toLocaleDateString()}`:"All records");
+  const dp=(k,o)=>cmpOn?(P?delta(s[k],P[k],o):'<span class="dl new">no data before</span>'):"";
+  const rows=[], perf=[];
+  const add=(arr,l,v,c,dk)=>arr.push(`<tr><td>${l}</td><td>${v}</td><td>${c||""}</td>${cmpOn?`<td>${dk||""}</td>`:""}</tr>`);
+  add(rows,"Total hours",fmt(s.hours),cmp(s.hours,T.hours,null,false),dp("hours",{p:false,neutral:true}));
+  if(s.days!=null) add(rows,"Days worked",s.days,"",dp("days",{p:false,d:0,neutral:true}));
+  if(s.avgDay!=null) add(rows,"Avg hours / day",fmt(s.avgDay),cmp(s.avgDay,T.avgDay,null,false),dp("avgDay",{p:false,neutral:true}));
+  if(s.jobs!=null) add(rows,"Jobs / work orders",s.jobs,"",dp("jobs",{p:false,d:0,neutral:true}));
+  if(s.hrsPerJob!=null) add(rows,"Avg hours / job",fmt(s.hrsPerJob),cmp(s.hrsPerJob,T.hrsPerJob,false,false),dp("hrsPerJob",{p:false,up:false}));
+  if(s.ot!=null) add(rows,"Overtime hours",fmt(s.ot),cmp(s.ot,T.ot,false,false),dp("ot",{p:false,up:false}));
+  if(s.billH!=null) add(rows,"Billable hours",fmt(s.billH),"",dp("billH",{p:false,neutral:true}));
+  if(s.rev!=null) add(rows,"Revenue",money(s.rev),"",dp("rev",{p:false,d:0}));
+  if(s.revPerHr!=null) add(rows,"Revenue / hour",money(s.revPerHr),"",dp("revPerHr",{p:false,d:0}));
+  if(s.eff!=null){add(perf,"Efficiency (est ÷ actual)",effPill(s.eff),cmp(s.eff,T.eff),dp("eff",{}));add(perf,"Estimated vs actual hrs",`${fmt(s.estH)} / ${fmt(s.actH)}`,"","");add(perf,"Jobs at/under estimate",pct(s.onBudget),cmp(s.onBudget,T.onBudget),dp("onBudget",{}));}
+  if(s.compRate!=null) add(perf,"Completion rate",ratePill(s.compRate),cmp(s.compRate,T.compRate),dp("compRate",{}));
+  if(s.callbacks!=null){add(perf,"Callbacks / rework",s.callbacks,"",dp("callbacks",{p:false,up:false,d:0}));add(perf,"Callback rate",ratePill(s.cbRate,false,.03,.08),cmp(s.cbRate,T.cbRate,false),dp("cbRate",{up:false}));}
+  if(s.inspPass!=null) add(perf,"Inspection pass rate",ratePill(s.inspPass),cmp(s.inspPass,T.inspPass),dp("inspPass",{}));
+  if(s.util!=null) add(perf,"Billable utilization",ratePill(s.util,true,.8,.65),cmp(s.util,T.util),dp("util",{}));
+  if(s.safety!=null) add(perf,"Safety incidents",s.safety,"",dp("safety",{p:false,up:false,d:0}));
   const {strengths,improve}=notesFor(s);
-  const taskRows=s.tasks.slice(0,12).map(([k,t])=>`<tr><td>${esc(k)}</td><td>${t.n}</td><td>${fmt(t.h)}</td><td>${t.act?effPill(t.est/t.act):"—"}</td></tr>`).join("");
+  const taskRows=s.tasks.slice(0,12).map(([k,t])=>`<tr><td>${esc(k)}</td><td>${t.n}</td><td>${fmt(t.h)}</td><td>${t.act?effPill(t.est/t.act):"—"}</td><td>${T.taskEff[k]!=null?pct(T.taskEff[k]):"—"}</td></tr>`).join("");
+  const chA=weeklyChart(s), chB=taskChart(s);
+  const note=people.notes[s.name]||"";
+  const scoreSub=s.prev&&s.prev.score!=null?delta(s.score,s.prev.score,{p:false,d:0}):"";
   return `<div class="report">
     <div class="head">
       <div><h3>${esc(s.name)}</h3><div class="sub">${s.group?`<b>${esc(s.group)}</b> · `:""}${range} · ${s.entries} records${s.rank?` · Rank ${s.rank} of ${s.of}${$("#groupSel").value!=="__all"&&$("#groupSel").value?" in group":""}`:` · Not ranked (fewer than ${+$("#setMin").value||1} records)`}${s.raws.length>1?`<br><span style="font-size:12px">Includes records under: ${s.raws.map(esc).join(", ")}</span>`:""}</div></div>
-      ${s.score!=null?`<div style="text-align:right"><div class="score">${fmt(s.score,0)}</div><div class="hint">Performance score / 100</div></div>`:""}
+      ${s.score!=null?`<div style="text-align:right"><div class="score">${fmt(s.score,0)}</div><div class="hint">Performance score / 100</div>${scoreSub}</div>`:""}
     </div>
     <div class="two">
       <div><h4>Workload</h4><table><tbody>${rows.join("")}</tbody></table></div>
       <div><h4>Performance &amp; efficiency</h4>${perf.length?`<table><tbody>${perf.join("")}</tbody></table>`:`<p class="hint">Add estimated hours, status, callback or billable columns to see performance metrics.</p>`}</div>
     </div>
+    ${chA||chB?`<div class="two">${chA||"<div></div>"}${chB||"<div></div>"}</div>`:""}
     <div class="two">
       <div><h4>Strengths</h4><ul class="notes">${strengths.length?strengths.map(x=>`<li>${esc(x)}</li>`).join(""):"<li class='hint'>—</li>"}</ul></div>
       <div><h4>Areas to improve</h4><ul class="notes">${improve.length?improve.map(x=>`<li>${esc(x)}</li>`).join(""):"<li class='hint'>Nothing flagged.</li>"}</ul></div>
     </div>
-    ${M.task?`<h4>By task / work type</h4><table><thead><tr><th>Task</th><th>Entries</th><th>Hours</th><th>Efficiency</th></tr></thead><tbody>${taskRows}</tbody></table>`:""}
-    <p class="hint" style="margin-top:14px">Generated ${new Date().toLocaleString()} from: ${esc(s.files.join(", "))}</p>
+    ${s.scoreParts.length?`<h4>How the score is made</h4><table class="breakdown"><tbody>${breakdownRows(s)}</tbody></table>`:""}
+    ${M.task?`<h4>By task / work type</h4><table><thead><tr><th>Task</th><th>Entries</th><th>Hours</th><th>Efficiency</th><th>Team</th></tr></thead><tbody>${taskRows}</tbody></table>`:""}
+    <h4>Manager notes</h4>
+    ${live?`<textarea id="noteBox" placeholder="Add context for this review: goals, conversations, things the numbers don't show. Saved in this browser and included in printed and exported reports.">${esc(note)}</textarea>`:(note?`<div class="notebox">${esc(note)}</div>`:`<p class="hint">—</p>`)}
+    <p class="hint" style="margin-top:14px">Generated ${new Date().toLocaleString()} by Tech Tally from: ${esc(s.files.join(", "))}</p>
   </div>`;
 }
-
 function openReport(name){
   const s=results.find(r=>r.name===name); if(!s) return;
-  const bg=document.createElement("div"); bg.className="modal-bg";
   document.querySelectorAll(".modal-bg").forEach(m=>m.remove());
+  const bg=document.createElement("div"); bg.className="modal-bg";
   const idx=shownList.findIndex(r=>r.name===name);
-  bg.innerHTML=`<div class="modal"><div class="modal-bar"><div class="nav"><button class="btn" id="mPrev" ${idx<=0?"disabled":""}>← Prev</button><button class="btn" id="mNext" ${idx<0||idx>=shownList.length-1?"disabled":""}>Next →</button></div><button class="btn primary" id="mCsv">Export CSV</button><button class="btn" id="mHtml">Export HTML</button><button class="btn" id="mPrint">Print / PDF</button><button class="btn" id="mClose">Close</button></div>${reportHTML(s)}</div>`;
+  bg.innerHTML=`<div class="modal"><div class="modal-bar"><div class="nav"><button class="btn" id="mPrev" ${idx<=0?"disabled":""}>← Prev</button><button class="btn" id="mNext" ${idx<0||idx>=shownList.length-1?"disabled":""}>Next →</button></div><button class="btn primary" id="mCsv">Export CSV</button><button class="btn" id="mHtml">Export HTML</button><button class="btn" id="mPrint">Print / PDF</button><button class="btn" id="mClose">Close</button></div>${reportHTML(s,true)}</div>`;
   document.body.appendChild(bg);
   bg.addEventListener("click",e=>{if(e.target===bg)bg.remove();});
   bg.querySelector("#mClose").onclick=()=>bg.remove();
   bg.querySelector("#mPrev").onclick=()=>idx>0&&openReport(shownList[idx-1].name);
   bg.querySelector("#mNext").onclick=()=>idx<shownList.length-1&&openReport(shownList[idx+1].name);
   bg.dataset.idx=idx;
+  const nb=bg.querySelector("#noteBox"); let nt;
+  nb.addEventListener("input",()=>{clearTimeout(nt);nt=setTimeout(()=>{const v=nb.value.trim();if(v)people.notes[s.name]=nb.value;else delete people.notes[s.name];savePeople();},300);});
   bg.querySelector("#mCsv").onclick=()=>download(fileSafe(s.name)+"_summary.csv",toCSV(employeeCSV(s)),"text/csv");
   bg.querySelector("#mHtml").onclick=()=>download(fileSafe(s.name)+"_summary.html",standalone([s]),"text/html");
   bg.querySelector("#mPrint").onclick=()=>printReports([s]);
 }
 
 /* ================= Export ================= */
-function fileSafe(s){return s.replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_")||"employee";}
+function fileSafe(s){return String(s).replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_")||"employee";}
 function download(name,content,type){
-  const blob=new Blob([type==="text/csv"?"﻿"+content:content],{type:type+";charset=utf-8"});
+  const blob=content instanceof Blob?content:new Blob([type==="text/csv"?"﻿"+content:content],{type:type+";charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
-  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
 }
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function makeZip(entries){
+  const enc=new TextEncoder(), parts=[], central=[]; let off=0;
+  const now=new Date(), tm=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1), dt=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
+  const used=new Set();
+  for(const e of entries){
+    let nm=e.name; let i=2; while(used.has(nm)){nm=e.name.replace(/(\.\w+)$/,`_${i++}$1`);} used.add(nm);
+    const name=enc.encode(nm), data=enc.encode(e.text), crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,tm,true);h.setUint16(12,dt,true);
+    h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,name.length,true);h.setUint16(28,0,true);
+    parts.push(h,name,data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,tm,true);c.setUint16(14,dt,true);
+    c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);
+    c.setUint16(30,0,true);c.setUint16(32,0,true);c.setUint16(34,0,true);c.setUint16(36,0,true);c.setUint32(38,0,true);c.setUint32(42,off,true);
+    central.push(c,name); off+=30+name.length+data.length;
+  }
+  const csize=central.reduce((a,p)=>a+p.byteLength,0);
+  const end=new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true);end.setUint16(8,entries.length,true);end.setUint16(10,entries.length,true);end.setUint32(12,csize,true);end.setUint32(16,off,true);
+  return new Blob([...parts,...central,end],{type:"application/zip"});
+}
+const csvText=rows=>"﻿"+toCSV(rows);
 const r1=v=>v==null||isNaN(v)?"":Math.round(v*10)/10;
 const p1=v=>v==null||isNaN(v)?"":Math.round(v*1000)/10;
-function teamRows(){
+function teamRows(list=scope){
+  const cmpOn=PERIOD&&PERIOD.compare;
   const head=["Employee","Group","Score","Rank","Total Hours","Days Worked","Avg Hrs/Day","Jobs","Avg Hrs/Job","Estimated Hrs","Actual Hrs (on est. jobs)","Efficiency %","At/Under Estimate %","Completion %","Callbacks","Callback Rate %","Inspection Pass %","Billable Hrs","Billable %","Overtime Hrs","Revenue","Revenue/Hr","Safety Incidents","First Date","Last Date","Records"];
-  const rows=[...scope].sort((a,b)=>(b.score??-1)-(a.score??-1)||a.name.localeCompare(b.name)).map(s=>[
-    s.name,s.group||"",r1(s.score),s.rank||"",r1(s.hours),s.days??"",r1(s.avgDay),s.jobs??"",r1(s.hrsPerJob),s.effRows?r1(s.estH):"",s.effRows?r1(s.actH):"",p1(s.eff),p1(s.onBudget),p1(s.compRate),s.callbacks??"",p1(s.cbRate),p1(s.inspPass),r1(s.billH),p1(s.util),r1(s.ot),s.rev!=null?Math.round(s.rev):"",r1(s.revPerHr),s.safety??"",s.from?dkey(s.from):"",s.to?dkey(s.to):"",s.entries]);
-  // drop entirely empty columns
+  if(cmpOn) head.push("Prev Score","Prev Efficiency %","Prev Callback Rate %","Prev Hours");
+  head.push("Manager Notes");
+  const rows=[...list].sort((a,b)=>(b.score??-1)-(a.score??-1)||a.name.localeCompare(b.name)).map(s=>{
+    const r=[s.name,s.group||"",r1(s.score),s.rank||"",r1(s.hours),s.days??"",r1(s.avgDay),s.jobs??"",r1(s.hrsPerJob),s.effRows?r1(s.estH):"",s.effRows?r1(s.actH):"",p1(s.eff),p1(s.onBudget),p1(s.compRate),s.callbacks??"",p1(s.cbRate),p1(s.inspPass),r1(s.billH),p1(s.util),r1(s.ot),s.rev!=null?Math.round(s.rev):"",r1(s.revPerHr),s.safety??"",s.from?dkey(s.from):"",s.to?dkey(s.to):"",s.entries];
+    if(cmpOn){const p=s.prev||{};r.push(r1(p.score),p1(p.eff),p1(p.cbRate),r1(p.hours));}
+    r.push(people.notes[s.name]||""); return r;});
   const keep=head.map((_,i)=>i===0||(i>=2&&i<5)||rows.some(r=>r[i]!==""&&r[i]!=null));
   return [head,...rows].map(r=>r.filter((_,i)=>keep[i]));
 }
 function employeeCSV(s){
-  const T=window.TEAM; const out=[["Employee Performance Summary"],["Employee",s.name],["Group",s.group||""],["Period",s.from?dkey(s.from)+" to "+dkey(s.to):"All records"],["Score",r1(s.score)],["Rank",s.rank?`${s.rank} of ${s.of}`:""],[],["Metric","Value","Team Average"]];
-  const add=(l,v,t)=>{if(v!==""&&v!=null)out.push([l,v,t??""]);};
-  add("Total Hours",r1(s.hours),r1(T.hours)); add("Days Worked",s.days,r1(T.days)); add("Avg Hours/Day",r1(s.avgDay),r1(T.avgDay));
-  add("Jobs",s.jobs,r1(T.jobs)); add("Avg Hours/Job",r1(s.hrsPerJob),r1(T.hrsPerJob));
-  if(s.effRows){add("Estimated Hours",r1(s.estH));add("Actual Hours (estimated jobs)",r1(s.actH));add("Efficiency %",p1(s.eff),p1(T.eff));add("At/Under Estimate %",p1(s.onBudget),p1(T.onBudget));}
-  add("Completion %",p1(s.compRate),p1(T.compRate)); add("Callbacks",s.callbacks); add("Callback Rate %",p1(s.cbRate),p1(T.cbRate));
-  add("Inspection Pass %",p1(s.inspPass),p1(T.inspPass)); add("Billable Hours",r1(s.billH)); add("Billable %",p1(s.util),p1(T.util));
-  add("Overtime Hours",r1(s.ot),r1(T.ot)); if(s.rev!=null){add("Revenue",Math.round(s.rev),Math.round(T.rev));add("Revenue/Hour",r1(s.revPerHr),r1(T.revPerHr));} add("Safety Incidents",s.safety);
+  const T=window.TEAM; const out=[["Employee Performance Summary"],["Employee",s.name],["Group",s.group||""],["Period",periodText()||(s.from?dkey(s.from)+" to "+dkey(s.to):"All records")],["Score",r1(s.score)],["Rank",s.rank?`${s.rank} of ${s.of}`:""],[],["Metric","Value","Team Average"].concat(s.prev!==undefined&&PERIOD.compare?["Previous Period"]:[])];
+  const P=s.prev||{}, cp=PERIOD&&PERIOD.compare;
+  const add=(l,v,t,pv)=>{if(v!==""&&v!=null)out.push(cp?[l,v,t??"",pv??""]:[l,v,t??""]);};
+  add("Total Hours",r1(s.hours),r1(T.hours),r1(P.hours)); add("Days Worked",s.days,r1(T.days),P.days); add("Avg Hours/Day",r1(s.avgDay),r1(T.avgDay),r1(P.avgDay));
+  add("Jobs",s.jobs,r1(T.jobs),P.jobs); add("Avg Hours/Job",r1(s.hrsPerJob),r1(T.hrsPerJob),r1(P.hrsPerJob));
+  if(s.effRows){add("Estimated Hours",r1(s.estH),"",r1(P.estH));add("Actual Hours (estimated jobs)",r1(s.actH),"",r1(P.actH));add("Efficiency %",p1(s.eff),p1(T.eff),p1(P.eff));add("At/Under Estimate %",p1(s.onBudget),p1(T.onBudget),p1(P.onBudget));}
+  add("Completion %",p1(s.compRate),p1(T.compRate),p1(P.compRate)); add("Callbacks",s.callbacks,"",P.callbacks); add("Callback Rate %",p1(s.cbRate),p1(T.cbRate),p1(P.cbRate));
+  add("Inspection Pass %",p1(s.inspPass),p1(T.inspPass),p1(P.inspPass)); add("Billable Hours",r1(s.billH),"",r1(P.billH)); add("Billable %",p1(s.util),p1(T.util),p1(P.util));
+  add("Overtime Hours",r1(s.ot),r1(T.ot),r1(P.ot)); if(s.rev!=null){add("Revenue",Math.round(s.rev),Math.round(T.rev),P.rev!=null?Math.round(P.rev):"");add("Revenue/Hour",r1(s.revPerHr),r1(T.revPerHr),r1(P.revPerHr));} add("Safety Incidents",s.safety,"",P.safety);
+  if(s.scoreParts.length){out.push([],["Score Breakdown","Detail","Points","Max"]);s.scoreParts.forEach(p=>out.push([p.label,p.detail,r1(p.pts),r1(p.max)]));}
   const {strengths,improve}=notesFor(s);
   out.push([],["Strengths"]); strengths.forEach(x=>out.push(["",x])); if(!strengths.length)out.push(["","—"]);
   out.push([],["Areas to Improve"]); improve.forEach(x=>out.push(["",x])); if(!improve.length)out.push(["","Nothing flagged"]);
-  if((window.EFFMAP||mapping).task){out.push([],["Task / Work Type","Entries","Hours","Efficiency %"]);s.tasks.forEach(([k,t])=>out.push([k,t.n,r1(t.h),t.act?p1(t.est/t.act):""]));}
+  if((window.EFFMAP||mapping).task){out.push([],["Task / Work Type","Entries","Hours","Efficiency %","Team Efficiency %"]);s.tasks.forEach(([k,t])=>out.push([k,t.n,r1(t.h),t.act?p1(t.est/t.act):"",p1(T.taskEff[k])]));}
+  out.push([],["Manager Notes",people.notes[s.name]||""]);
   return out;
 }
 function standalone(list){
-  const css=document.querySelector("style").textContent.replace(/@media print\{[\s\S]*?\n  \}\n/,"@media print{.report{border:0;page-break-after:always}.pill{-webkit-print-color-adjust:exact;print-color-adjust:exact}}\n");
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Performance Summary${list.length===1?" – "+esc(list[0].name):"s"}</title><style>${css}body{padding:24px}</style></head><body><main>${list.map(reportHTML).join("")}</main></body></html>`;
+  const css=document.querySelector("style").textContent;
+  return `<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Performance Summary${list.length===1?" – "+esc(list[0].name):"s"}</title><style>${css}body{padding:24px}@media print{body > *:not(#printArea){display:block!important}}</style></head><body><main>${list.map(s=>reportHTML(s)).join("")}</main></body></html>`;
 }
-function printReports(list){
-  $("#printArea").innerHTML=list.map(reportHTML).join("");
-  setTimeout(()=>window.print(),50);
+function printReports(list){ $("#printArea").innerHTML=list.map(s=>reportHTML(s)).join(""); setTimeout(()=>window.print(),80); }
+function scopeTag(){const g=$("#groupSel").value;return (g&&g!=="__all"?"_"+fileSafe(g):"")+(PERIOD&&!PERIOD.all?`_${dkey(PERIOD.from)}_to_${dkey(PERIOD.to)}`:"");}
+function groupEntries(){
+  const out=[], sel=$("#groupSel"), cur=sel.value;
+  for(const g of groupsList()){ const list=results.filter(r=>(r.group||"")===g); computeTeam(list); out.push({name:`groups/${fileSafe(g||"No_group")}_summary.csv`,text:csvText(teamRows(list))}); }
+  sel.value=cur; applyScope(); return out;
 }
-function scopeTag(){const g=$("#groupSel").value;return g&&g!=="__all"?"_"+fileSafe(g):"";}
-$("#exportTeam").onclick=()=>{download(`team_performance_summary${scopeTag()}_${dkey(new Date())}.csv`,toCSV(teamRows()),"text/csv");toast(`Exported summary for ${scope.length} employees`);};
-$("#exportGroups").onclick=async()=>{
-  const sel=$("#groupSel"),cur=sel.value; const gs=groupsList();
-  for(const g of gs){sel.value=g;applyScope();download(`team_summary_${fileSafe(g||"No_group")}_${dkey(new Date())}.csv`,toCSV(teamRows()),"text/csv");await new Promise(r=>setTimeout(r,250));}
-  sel.value=cur;applyScope();toast(`Exported ${gs.length} group summaries`);
-};
-$("#exportEach").onclick=async()=>{
+$("#exportTeam").onclick=()=>{download(`team_summary${scopeTag()}_${dkey(new Date())}.csv`,toCSV(teamRows()),"text/csv");toast(`Exported summary for ${scope.length} employees`);};
+$("#exportGroups").onclick=()=>{const e=groupEntries();download(`group_summaries${scopeTag()}.zip`,makeZip(e));toast(`Exported ${e.length} group summaries`);};
+$("#exportEach").onclick=()=>{const list=[...scope].sort((a,b)=>a.name.localeCompare(b.name));download(`employee_summaries${scopeTag()}.zip`,makeZip(list.map(s=>({name:`${fileSafe(s.name)}_summary.csv`,text:csvText(employeeCSV(s))}))));toast(`Exported ${list.length} employee files in one ZIP`);};
+$("#exportZip").onclick=()=>{
   const list=[...scope].sort((a,b)=>a.name.localeCompare(b.name));
-  for(const s of list){download(fileSafe(s.name)+"_summary.csv",toCSV(employeeCSV(s)),"text/csv");await new Promise(r=>setTimeout(r,250));}
-  toast(`Exported ${list.length} employee files`);
+  const e=[{name:"team_summary.csv",text:csvText(teamRows())},...list.map(s=>({name:`employees/${fileSafe(s.name)}_summary.csv`,text:csvText(employeeCSV(s))})),{name:"all_reports.html",text:standalone(list)}];
+  if(groupsList().some(g=>g)) e.push(...groupEntries());
+  if(ISSUES.list.length) e.push({name:"data_issues.csv",text:csvText(issuesRows())});
+  download(`tech_tally_export${scopeTag()}_${dkey(new Date())}.zip`,makeZip(e)); toast(`Exported ${e.length} files in one ZIP`);
 };
 $("#exportHtml").onclick=()=>{download(`employee_reports${scopeTag()}_${dkey(new Date())}.html`,standalone([...scope].sort((a,b)=>a.name.localeCompare(b.name))),"text/html");toast("Exported reports");};
 $("#printAll").onclick=()=>printReports([...scope].sort((a,b)=>a.name.localeCompare(b.name)));
-// menu, search, group select, keyboard
 $("#moreBtn").onclick=e=>{e.stopPropagation();$("#moreMenu").classList.toggle("hidden");};
 document.addEventListener("click",()=>$("#moreMenu").classList.add("hidden"));
 $("#search").addEventListener("input",render);
@@ -749,15 +1128,15 @@ document.addEventListener("keydown",e=>{
 function openPeople(){
   document.querySelectorAll(".modal-bg").forEach(m=>m.remove());
   const bg=document.createElement("div"); bg.className="modal-bg";
-  const gs=[...new Set(results.map(r=>r.group).filter(Boolean))].sort();
-  const list=[...results].sort((a,b)=>a.name.localeCompare(b.name));
+  const list=[...ALL.values()].map(e=>{const r=results.find(x=>x.name===e.name);const cg=Object.entries(e.gc).sort((a,b)=>b[1]-a[1])[0];return {name:e.name,raws:[...e.raws],entries:e.rows.length,hours:e.rows.reduce((a,x)=>a+x.hrs,0),group:people.groups[e.name]!==undefined?people.groups[e.name]:(cg?cg[0]:""),csvGroup:cg?cg[0]:"",inPeriod:!!r};}).sort((a,b)=>a.name.localeCompare(b.name));
+  const gs=[...new Set(list.map(r=>r.group).filter(Boolean))].sort();
   bg.innerHTML=`<div class="modal"><div class="panel" style="margin:0">
     <div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 style="margin:0">People &amp; groups</h2><button class="btn" id="pClose">Done</button></div>
-    <p class="hint" style="margin-top:0">Rename by editing a name. Type an existing name to merge two people. Tick several and press <b>Merge</b> to combine duplicates. Groups (crew, role, apprentice/journeyman…) give each group its own summary and ranking. Changes are saved in this browser.</p>
+    <p class="hint" style="margin-top:0">Rename by editing a name. Type an existing name to merge two people, or tick several and press <b>Merge</b>. Groups (crew, role, apprentice/journeyman…) give each group its own summary and ranking. Saved in this browser; use <b>Save setup</b> to move it to another computer.</p>
     <div class="toolbar">
       <button class="btn" id="pMerge">Merge selected</button>
-      <input type="search" id="pGroupName" list="groupNames" placeholder="Group name…" style="max-width:200px">
-      <button class="btn" id="pSetGroup">Set group for selected</button>
+      <input type="search" id="pGroupName" list="groupNames" placeholder="Group name…" style="max-width:180px">
+      <button class="btn" id="pSetGroup">Set group</button>
       <button class="btn" id="pClearGroup">Clear group</button>
       <span style="flex:1"></span>
       <button class="btn" id="pExport">Save setup</button>
@@ -765,69 +1144,76 @@ function openPeople(){
       <button class="btn" id="pReset">Reset all</button>
     </div>
     <datalist id="groupNames">${gs.map(g=>`<option value="${esc(g)}">`).join("")}</datalist>
-    <div class="table-wrap" style="max-height:60vh"><table><thead><tr><th style="width:30px"><input type="checkbox" id="pAll"></th><th style="text-align:left">Name</th><th style="text-align:left">Group</th><th>Records</th><th>Hours</th><th></th></tr></thead><tbody>
+    <div class="table-wrap" style="max-height:60vh;display:block"><table><thead><tr><th style="width:30px"><input type="checkbox" id="pAll"></th><th style="text-align:left">Name</th><th style="text-align:left">Group</th><th>Records</th><th>Hours</th><th></th></tr></thead><tbody>
     ${list.map(r=>`<tr data-n="${esc(r.name)}">
       <td><input type="checkbox" class="pChk"></td>
-      <td style="text-align:left"><input type="search" class="pName" value="${esc(r.name)}" style="min-width:200px">${r.raws.length>1||r.raws[0]!==r.name?`<div class="hint" style="font-size:11.5px;margin-top:3px;white-space:normal">from: ${r.raws.map(esc).join(", ")}</div>`:""}</td>
-      <td style="text-align:left"><input type="search" class="pGroup" list="groupNames" value="${esc(r.group||"")}" placeholder="${r.csvGroup?esc(r.csvGroup)+" (from CSV)":"—"}" style="min-width:150px"></td>
+      <td style="text-align:left"><input type="search" class="pName" value="${esc(r.name)}" style="min-width:180px">${r.raws.length>1||r.raws[0]!==r.name?`<div class="hint" style="font-size:11.5px;margin-top:3px;white-space:normal">from: ${r.raws.map(esc).join(", ")}</div>`:""}${people.notes[r.name]?`<div class="hint" style="font-size:11.5px">📝 has notes</div>`:""}</td>
+      <td style="text-align:left"><input type="search" class="pGroup" list="groupNames" value="${esc(r.group||"")}" placeholder="${r.csvGroup?esc(r.csvGroup)+" (from CSV)":"—"}" style="min-width:140px"></td>
       <td>${r.entries}</td><td>${fmt(r.hours)}</td>
-      <td>${r.raws.length>1||r.raws[0]!==r.name?'<button class="btn pSplit" title="Undo renames / merges">Undo</button>':""}</td></tr>`).join("")}
+      <td>${r.raws.length>1||r.raws[0]!==r.name?'<button class="btn sm pSplit" title="Undo renames / merges">Undo</button>':""}</td></tr>`).join("")}
     </tbody></table></div></div></div>`;
   document.body.appendChild(bg);
   const done=()=>{savePeople();compute();openPeople();};
   const selected=()=>[...bg.querySelectorAll("tbody tr")].filter(tr=>tr.querySelector(".pChk").checked).map(tr=>tr.dataset.n);
-  const renameTo=(from,to)=>{
-    to=to.replace(/\s+/g," ").trim(); if(!to||to===from) return;
-    const r=results.find(x=>x.name===from); if(!r) return;
-    r.raws.forEach(raw=>people.aliases[raw]=to);
-    Object.keys(people.aliases).forEach(k=>{if(people.aliases[k]===from) people.aliases[k]=to;});
-    if(people.groups[from]!==undefined&&people.groups[to]===undefined) people.groups[to]=people.groups[from];
-    delete people.groups[from];
-    Object.keys(people.aliases).forEach(k=>{if(k===people.aliases[k]) delete people.aliases[k];});
-  };
   bg.querySelector("#pClose").onclick=()=>bg.remove();
   bg.addEventListener("click",e=>{if(e.target===bg)bg.remove();});
   bg.querySelector("#pAll").onchange=e=>bg.querySelectorAll(".pChk").forEach(c=>c.checked=e.target.checked);
-  bg.querySelectorAll(".pName").forEach(inp=>inp.addEventListener("change",()=>{const from=inp.closest("tr").dataset.n;const to=inp.value;const merging=results.some(x=>x.name===to.trim()&&x.name!==from);renameTo(from,to);done();toast(merging?`Merged into ${to.trim()}`:`Renamed to ${to.trim()}`);}));
+  bg.querySelectorAll(".pName").forEach(inp=>inp.addEventListener("change",()=>{const from=inp.closest("tr").dataset.n;const to=inp.value.trim();const merging=ALL.has(to)&&to!==from;renameTo(from,to);done();toast(merging?`Merged into ${to}`:`Renamed to ${to}`);}));
   bg.querySelectorAll(".pGroup").forEach(inp=>inp.addEventListener("change",()=>{const n=inp.closest("tr").dataset.n;people.groups[n]=inp.value.trim();done();}));
-  bg.querySelectorAll(".pSplit").forEach(b=>b.onclick=()=>{const n=b.closest("tr").dataset.n;const r=results.find(x=>x.name===n);r.raws.forEach(raw=>delete people.aliases[raw]);done();toast("Undone");});
+  bg.querySelectorAll(".pSplit").forEach(b=>b.onclick=()=>{const n=b.closest("tr").dataset.n;ALL.get(n).raws.forEach(raw=>delete people.aliases[raw]);done();toast("Undone");});
   bg.querySelector("#pMerge").onclick=()=>{const sel=selected(); if(sel.length<2){toast("Tick two or more people to merge");return;}
-    const target=sel.map(n=>results.find(r=>r.name===n)).sort((a,b)=>b.entries-a.entries)[0].name;
-    sel.filter(n=>n!==target).forEach(n=>renameTo(n,target)); done(); toast(`Merged ${sel.length} into ${target} — edit the name to rename`);};
+    const target=sel.sort((a,b)=>ALL.get(b).rows.length-ALL.get(a).rows.length)[0];
+    sel.filter(n=>n!==target).forEach(n=>renameTo(n,target)); done(); toast(`Merged ${sel.length} into ${target}. Edit the name to rename.`);};
   bg.querySelector("#pSetGroup").onclick=()=>{const sel=selected(),g=bg.querySelector("#pGroupName").value.trim(); if(!sel.length){toast("Tick people first");return;} if(!g){toast("Type a group name");return;} sel.forEach(n=>people.groups[n]=g); done(); toast(`${sel.length} added to ${g}`);};
   bg.querySelector("#pClearGroup").onclick=()=>{const sel=selected(); if(!sel.length){toast("Tick people first");return;} sel.forEach(n=>people.groups[n]=""); done();};
-  bg.querySelector("#pReset").onclick=()=>{if(!bg.querySelector("#pReset").dataset.sure){bg.querySelector("#pReset").dataset.sure=1;bg.querySelector("#pReset").textContent="Click again to reset";return;} people={aliases:{},groups:{}};done();toast("All renames, merges and groups cleared");};
-  bg.querySelector("#pExport").onclick=()=>download("tech-tally-setup.json",JSON.stringify({people,mapping},null,2),"application/json");
-  bg.querySelector("#pImport").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(j.people)people={aliases:j.people.aliases||{},groups:j.people.groups||{}};if(j.mapping)mapping=Object.assign(mapping,j.mapping);done();toast("Setup loaded");}catch(err){toast("That file isn't a Tech Tally setup");}};
+  bg.querySelector("#pReset").onclick=e=>{const b=e.currentTarget;if(!b.dataset.sure){b.dataset.sure=1;b.textContent="Click again to reset";return;} people={aliases:{},groups:{},notes:people.notes,notSame:[]};done();toast("Renames, merges and groups cleared (notes kept)");};
+  bg.querySelector("#pExport").onclick=()=>download("tech-tally-setup.json",JSON.stringify({app:"tech-tally",people,mapping},null,2),"application/json");
+  bg.querySelector("#pImport").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(!j.people)throw 0;people=Object.assign({aliases:{},groups:{},notes:{},notSame:[]},j.people);if(j.mapping)mapping=Object.assign(mapping,j.mapping);done();toast("Setup loaded");}catch(err){toast("That file isn't a Tech Tally setup");}};
 }
 $("#peopleBtn").onclick=openPeople;
 
 /* ================= Sample data ================= */
 $("#sampleBtn").onclick=()=>{
-  const names=["Mike Torres","Sarah Chen","Dave Kowalski","Jamal Brooks","Lisa Moreno"];
+  const names=["Mike Torres","Sarah Chen","Dave Kowalski","Jamal Brooks","Lisa Moreno","Ryan Patel"];
   const tasks=[["Panel upgrade",8],["Service call",2],["Rough-in",6],["Lighting install",3],["EV charger install",5],["Troubleshooting",2.5],["Trim-out",4]];
-  const skill={"Mike Torres":1.05,"Sarah Chen":1.18,"Dave Kowalski":0.86,"Jamal Brooks":0.97,"Lisa Moreno":1.1};
-  let seed=7; const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
-  let wo=4100; const crew={"Mike Torres":"Crew A","Sarah Chen":"Crew A","Dave Kowalski":"Crew B","Jamal Brooks":"Crew B","Lisa Moreno":"Crew A"};
-  const lines=[["Date","Employee","Crew","Work Order","Task","Estimated Hours","Actual Hours","Billable Hours","Status","Callback","Inspection","Revenue"]];
-  const start=new Date(); start.setDate(start.getDate()-27);
-  for(let d=0;d<28;d++){
-    const day=new Date(start); day.setDate(start.getDate()+d); if(day.getDay()===0||day.getDay()===6) continue;
+  const skill={"Mike Torres":[1.0,1.08],"Sarah Chen":[1.17,1.19],"Dave Kowalski":[0.8,0.95],"Jamal Brooks":[1.02,0.92],"Lisa Moreno":[1.08,1.12],"Ryan Patel":[0.75,0.85]};
+  const crew={"Mike Torres":"Crew A","Sarah Chen":"Crew A","Dave Kowalski":"Crew B","Jamal Brooks":"Crew B","Lisa Moreno":"Crew A","Ryan Patel":"Apprentices"};
+  let seed=20261119; const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};
+  let wo=4100; const lines=[["Date","Employee","Crew","Work Order","Task","Estimated Hours","Actual Hours","Billable Hours","Status","Callback","Inspection","Revenue"]];
+  const days=56, start=addDays(new Date(),-(days-1));
+  for(let d=0;d<days;d++){
+    const day=addDays(start,d); if(day.getDay()===0||day.getDay()===6) continue;
+    const late=d>=days/2;
     for(const n of names){
-      let left=8+(n==="Dave Kowalski"&&rnd()<.4?2.5:0)+(rnd()<.15?1.5:0);
+      const sk=skill[n][late?1:0];
+      let left=8+(n==="Dave Kowalski"&&rnd()<(late?.2:.45)?2.5:0)+(rnd()<.15?1.5:0);
       while(left>1){
         const [t,e]=tasks[Math.floor(rnd()*tasks.length)];
-        let act=Math.round(e/skill[n]*(0.8+rnd()*0.4)*4)/4; act=Math.min(act,left); left-=act;
-        const status=rnd()<(n==="Dave Kowalski"?.82:.94)?"Completed":"In Progress";
-        const cb=rnd()<(n==="Dave Kowalski"?.09:n==="Sarah Chen"?.01:.04)?"Yes":"No";
+        let act=Math.round(e/sk*(0.8+rnd()*0.4)*4)/4; act=Math.min(act,left); left-=act;
+        const status=rnd()<(n==="Dave Kowalski"?(late?.9:.8):n==="Ryan Patel"?.85:.94)?"Completed":"In Progress";
+        const cbp=n==="Dave Kowalski"?(late?.05:.11):n==="Sarah Chen"?.01:n==="Jamal Brooks"?(late?.07:.03):n==="Ryan Patel"?.08:.04;
+        const cb=rnd()<cbp?"Yes":"No";
         const insp=/Panel|Rough|EV/.test(t)?(rnd()<(cb==="Yes"?.5:.95)?"Pass":"Fail"):"";
         const bill=Math.round(act*(0.7+rnd()*0.3)*4)/4;
-        lines.push([dkey(day),n,crew[n],"WO-"+(wo++),t,e,act,bill,status,cb,insp,Math.round(e*95+rnd()*120)]);
+        const who=(n==="Mike Torres"&&d>days-6&&rnd()<.5)?"Torres, M.":n;
+        lines.push([dkey(day),who,crew[n],"WO-"+(wo++),t,e,act,bill,status,cb,insp,Math.round(e*95+rnd()*120)]);
       }
     }
   }
+  // a few realistic problems for the data check
+  lines.push(lines[12].slice(), lines[40].slice());
+  lines.push([dkey(addDays(new Date(),-3)),"","Crew B","WO-9001","Service call",2,2,2,"Completed","No","",210]);
+  lines.push([dkey(addDays(new Date(),-2)),"Lisa Moreno","Crew A","WO-9002","Trim-out",4,"n/a",0,"Completed","No","",400]);
   loadText("sample_timesheets.csv",toCSV(lines)); refresh();
 };
+
+/* ================= Install as app (PWA) ================= */
+let deferredInstall=null;
+if("serviceWorker" in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register("sw.js").catch(()=>{});
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;$("#installBtn").classList.remove("hidden");});
+addEventListener("appinstalled",()=>{$("#installBtn").classList.add("hidden");toast("Installed. Open Tech Tally from your apps.");});
+$("#installBtn").onclick=async()=>{if(!deferredInstall)return;deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;$("#installBtn").classList.add("hidden");};
+if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!navigator.standalone&&/^https?:/.test(location.protocol)){$("#installBtn").classList.remove("hidden");$("#installBtn").onclick=()=>toast("To install: tap Share, then “Add to Home Screen”.");}
 </script>
 </body>
 </html>

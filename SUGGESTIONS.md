@@ -18,22 +18,27 @@
 ## Shipped
 
 - Dark mode (default) with light toggle
-- People & groups: rename, merge duplicates, group by crew / role, per-group summaries and rankings, save/load setup
-- Search, group filter, efficiency bars, Prev/Next through reports (← → keys)
-- Minimum records before someone is ranked
-- Collapsible column matching, consolidated export menu
+- People & groups: rename, merge, group by crew / role, per-group summaries, save/load setup
+- Data check panel with duplicate-row removal and downloadable issues list
+- Automatic duplicate-name suggestions (initials, nicknames, typos)
+- Score breakdown on hover/tap and in every report
+- Compact drop bar, column views (Overview / Productivity / Quality / Money), frozen name column
+- Four headline numbers with period-over-period change
+- Phone card layout
+- Report charts: hours per week and efficiency by task vs team
+- Period filter + compare with previous period
+- Manager notes per employee (in reports and exports)
+- Installable offline app (PWA)
+- One-ZIP export
+- Visible privacy note
 
 ## Feature ideas for the tool
 
 | Priority | Feature | Why |
 |---|---|---|
-| High | **Date range filter** (this week / month / custom) | Review a specific period without editing CSVs |
-| High | **Trend view**: score and efficiency by week for each person | Shows whether someone is improving, which is more useful than one number |
 | Medium | **Adjustable score weights** | Let each shop decide what matters (e.g. callbacks count more) |
-| Medium | **Saved column mappings** (stored in the browser) | Recurring exports from the same software map instantly |
-| Medium | **Single ZIP export** of all individual CSVs | One download instead of many separate files |
+| Medium | **Saved column mappings per export format** | Recurring exports from the same software map instantly |
 | Medium | **Excel (.xlsx) input** | Many timekeeping systems export Excel |
 | Low | **Material cost and gross margin per job** | Ties labor efficiency to profit |
-| Low | **Charts** (hours by task, efficiency vs. team) | Faster to read in one-on-ones |
-| Low | **Notes field per employee** included in the exported report | Managers can add context before printing |
 | Low | **Presets for common software exports** (ServiceTitan, Jobber, Housecall Pro, QuickBooks Time) | Zero-setup imports |
+| Low | **Goals per person** (e.g. callback rate under 3%) shown on their report | Turns reviews into targets |

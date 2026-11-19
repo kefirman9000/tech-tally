@@ -16,6 +16,17 @@ Dark mode by default (toggle top-right). Everything runs in your browser. No dat
    - **Each employee CSV**: one summary file per person
    - **All reports HTML** or **Print / PDF**: one page per employee
 
+## What's on the page
+
+- **Data check**: counts every row and lists anything skipped or suspicious (no name, unreadable hours or dates, unusual hours, duplicates). Exact duplicates from overlapping exports are removed automatically; you can turn this off.
+- **Duplicate name suggestions**: e.g. *"M. Torres looks like Mike Torres. Merge?"* (initials, nicknames, typos).
+- **Period filter and comparison**: all dates, last 7/14/28 days, latest month or custom, with optional comparison against the previous period (▲/▼ on every metric).
+- **Views**: Overview / Productivity / Quality / Money / All columns. The name column stays fixed while scrolling, and phones get a card layout.
+- **Score breakdown**: hover or tap any score to see exactly how it was calculated.
+- **Reports**: workload and performance vs team and previous period, hours-per-week and efficiency-by-task charts, strengths and areas to improve, score breakdown and **manager notes** (saved in your browser and included in printed and exported reports).
+- **Exports**: team summary CSV, or one ZIP with everything (team + group summaries, every employee CSV, all reports, data issues).
+- **Install as an app** from the button in the header (Chrome/Edge), or Share → Add to Home Screen on iPhone. It works offline after the first visit.
+
 ## People & groups
 
 Click **👥 People & groups** under the team summary to:
