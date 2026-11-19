@@ -62,7 +62,12 @@ Column names are matched automatically and can be changed in the dropdowns. File
 ## Metrics
 
 - **Efficiency** = estimated hours ÷ actual hours on jobs that have an estimate. Over 100% means faster than estimated.
-- **Score (0–100)** is a weighted blend of efficiency (40%), completion (25%), callbacks (20%), inspection pass (15%) and billable utilization (15%). It uses only the metrics your data contains and re-weights to match.
+- **Completion rate** is counted per job: a job logged over several days counts once and is complete if any of its rows says so. Cancelled, void and no-show jobs are left out, and statuses the tool doesn't recognise are listed in the data check instead of counting as incomplete.
+- **Overtime** (when there's no overtime column) is hours past the standard week, worked out on full Monday–Sunday weeks and counted on the days it happened, so a period that splits a week still shows it correctly.
+- **Inspection pass rate** only counts clear pass or fail results; blanks, "N/A" and "Pending" are left out.
+- **Score (0–100)** is a weighted blend of efficiency (35%), completion (20%), callbacks (20%), inspection pass (15%) and billable utilization (10%). It uses only the metrics your data contains and re-weights to match. Efficiency gets full marks at 105% of your target, so working to estimate scores well without rewarding rushing.
+- **Latest month** compares month-to-date with the same days of the previous month when your data stops partway through a month.
+- Semicolon-separated files are read with decimal commas (`7,5` = 7.5 hours).
 - Names are normalized, so `Torres, Mike`, `mike torres` and `Mike Torres` count as one person.
 
 See [SUGGESTIONS.md](SUGGESTIONS.md) for ideas on improving the data and the tool.
